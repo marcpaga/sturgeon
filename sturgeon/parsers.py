@@ -22,7 +22,7 @@ def register_predict(parser):
         help='Path where to save the results'
     )
     subparser.add_argument(
-        '-m', '--model-file',
+        '-m', '--model-files',
         type=str,
         required = True,
         nargs='+',
@@ -34,16 +34,16 @@ def register_predict(parser):
         help='Also plot the results of the predictions'
     )
 
-    subparser.set_defaults(fun=run_predict)
+    subparser.set_defaults(func=run_predict)
 
 def run_predict(args):
 
     from sturgeon.cli import predict
 
-    predict(
+    predict.predict(
         input_path = args.input_path,
         output_path = args.output_path,
-        model_file = args.model_file,
+        model_files = args.model_files,
         plot_results = args.plot_results
     )
 
@@ -72,7 +72,7 @@ def register_watch(parser):
         help='Path where to save the results'
     )
     subparser.add_argument(
-        '-m', '--model-file',
+        '-m', '--model-files',
         type=str,
         required = True,
         nargs='+',
@@ -84,7 +84,7 @@ def register_watch(parser):
         help='Also plot the results of the predictions'
     )
 
-    subparser.set_defaults(fun=run_watch)
+    subparser.set_defaults(func=run_watch)
 
 def run_watch(args):
 
@@ -93,6 +93,6 @@ def run_watch(args):
     watch(
         input_path = args.input_path,
         output_path = args.output_path,
-        model_file = args.model_file,
+        model_files = args.model_files,
         plot_results = args.plot_results
     )

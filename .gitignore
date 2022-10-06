@@ -51,3 +51,7 @@ MANIFEST
 .venv*/
 venv
 venv/*
+
+*.zip
+
+results
