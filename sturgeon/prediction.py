@@ -61,7 +61,7 @@ def predict_samples(
     model_file: str, 
     bed_files: List[str], 
     output_dir: str,
-    plot_results: Optional[bool],
+    plot_results: Optional[bool] = False,
 ):
 
     model_name = Path(model_file).stem
@@ -123,9 +123,9 @@ def predict_samples(
             )
             scores = predict_sample(x, inference_session)
 
+            n = np.sum(x != NOMEASURE_VALUE)
             if calculate_weighted_mean:
                 # take the weighted average of all models
-                n = np.sum(x != NOMEASURE_VALUE)
                 calculated_weights = np.ones(scores.shape, dtype=float)
 
                 for m in range(calculated_weights.shape[0]):
@@ -156,7 +156,7 @@ def predict_samples(
                 final_scores = scores.mean(0)
 
             
-            prediction_df = {'number_probes': np.sum(x != NOMEASURE_VALUE)}
+            prediction_df = {'number_probes': n}
             for i in range(final_scores.shape[0]):
                 prediction_df[decoding_dict[str(i)]] = final_scores[i]
             prediction_df = pd.DataFrame(prediction_df, index = [0])
