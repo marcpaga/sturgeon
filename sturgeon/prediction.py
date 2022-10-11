@@ -91,6 +91,14 @@ def predict_samples(
         except FileNotFoundError:
             color_dict = None
 
+        try:
+            weight_matrix = np.load(zipf.open('weight_scores.npz'))
+            mean_probes_per_timepoint = weight_matrix['avgsites']
+            accuracy_per_timepoint_per_model = weight_matrix['performance']
+            calculate_weighted_mean = True
+        except FileNotFoundError:
+            calculate_weighted_mean = False
+
         so = onnxruntime.SessionOptions()
         so.inter_op_num_threads = 1
         so.intra_op_num_threads = 1
@@ -115,15 +123,42 @@ def predict_samples(
             )
             scores = predict_sample(x, inference_session)
 
-            if calibrators:
-                for i in range(scores.shape[0]):
-                    scores[i, :] = calibrators[i].calibrate(scores[i, :])
+            if calculate_weighted_mean:
+                # take the weighted average of all models
+                n = np.sum(x != NOMEASURE_VALUE)
+                calculated_weights = np.ones(scores.shape, dtype=float)
 
-            scores = scores.max(0)
+                for m in range(calculated_weights.shape[0]):
+
+                    weights = accuracy_per_timepoint_per_model[m]
+                    n_probes = mean_probes_per_timepoint[m]
+                    t = n_probes.searchsorted(n)
+                    t = int(t)
+                    if t == weights.shape[0]:
+                        calculated_weights[m, :] = weights[t-1]
+                    elif t == 0:
+                        calculated_weights[m, :] = weights[t]
+                    else:
+                        weights = weights[t-1:t+1]
+                        x = [n_probes[t-1], n_probes[t]]
+                        for i in range(weights.shape[1]):
+                            y = weights[:, i]
+                            calculated_weights[m, i] = np.interp(n, x, y)
+
+                final_scores = np.zeros(scores.shape[1])
+                for i in range(scores.shape[1]):
+                    final_scores[i] = np.average(
+                        a = scores[:, i], 
+                        weights = calculated_weights[:, i]
+                    )
+
+            else:
+                final_scores = scores.mean(0)
+
             
             prediction_df = {'number_probes': np.sum(x != NOMEASURE_VALUE)}
-            for i in range(scores.shape[0]):
-                prediction_df[decoding_dict[str(i)]] = scores[i]
+            for i in range(final_scores.shape[0]):
+                prediction_df[decoding_dict[str(i)]] = final_scores[i]
             prediction_df = pd.DataFrame(prediction_df, index = [0])
             prediction_df.to_csv(
                 output_stem + '.csv', 

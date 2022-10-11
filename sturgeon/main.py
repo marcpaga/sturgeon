@@ -22,8 +22,6 @@ def run():
     )
     parser.set_defaults(func=lambda _: parser.print_help())
 
-    # the path to the configuration file
-
     from sturgeon.parsers import (
         register_predict,
         register_watch,
