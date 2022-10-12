@@ -1,5 +1,5 @@
 import zipfile
-from warnings import warn 
+import logging
 
 import pandas as pd
 import numpy as np
@@ -32,11 +32,14 @@ def validate_model_file(zip_file: str):
                 mf = mf,
                 zf = zip_file,
             )
-            raise FileNotFoundError(err_msg)
+            logging.error(err_msg)
+            return False
+            
 
     non_mandatory_files = {
         'calibration.npy': 'score calibration will not be possible',
-        'colors.json': 'default colors will be used'
+        'colors.json': 'default colors will be used',
+        'weight_scores.npz': 'weighted average score will not be possible'
     }
 
     for nmf, err in non_mandatory_files.items():
@@ -46,7 +49,7 @@ def validate_model_file(zip_file: str):
                 zf = zip_file,
                 err = err,
             )
-            warn(wrn_msg)
+            logging.warning(wrn_msg)
 
     return True
 

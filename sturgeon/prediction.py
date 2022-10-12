@@ -3,6 +3,7 @@ from pathlib import Path
 import json
 import zipfile
 from typing import Optional, List
+import logging
 
 import numpy as np
 import pandas as pd
@@ -11,7 +12,7 @@ import onnxruntime
 from sturgeon.utils import load_bed_file
 from sturgeon.calibration import HistogramCalibration
 from sturgeon.plot import plot_prediction
-from sturgeon.constants import UNMETHYL_VALUE, NOMEASURE_VALUE
+from sturgeon.constants import METHYL_VALUE, UNMETHYL_VALUE, NOMEASURE_VALUE
 
 def bed_to_numpy(
     bed_df: pd.DataFrame, 
@@ -35,6 +36,30 @@ def bed_to_numpy(
     x = np.transpose(np.array(bed_df[methyl_col]))
     x = x.astype(np.float32)
     x[np.isnan(x)] = NOMEASURE_VALUE
+
+    t = 'Total amount of measurable probes:'
+    logging.info('{0:45s} {1:6d}'.format(t, len(x)))
+    
+    t = 'Number of not measured probes:'
+    i = np.sum(x == NOMEASURE_VALUE)
+    p = (i/len(x))*100
+    logging.info('{0:45s} {1:6d} ({2:3.2f}%)'.format(t, i, p))
+
+    t = 'Number of measured probes:'
+    i = np.sum(x != NOMEASURE_VALUE)
+    p = (i/len(x))*100
+    logging.info('{0:45s} {1:6d} ({2:3.2f}%)'.format(t, i, p))
+
+    t = 'Number of measured methylated probes:'
+    m = np.sum(x == METHYL_VALUE)
+    p = (m/i)*100
+    logging.info('{0:45s} {1:6d} ({2:3.2f}%)'.format(t, m, p))
+
+    t = 'Number of measured non-methylated probes:'
+    m = np.sum(x == UNMETHYL_VALUE)
+    p = (m/i)*100
+    logging.info('{0:45s} {1:6d} ({2:3.2f}%)'.format(t, m, p))
+
     x = np.expand_dims(x, 0)
     
     return x
@@ -67,13 +92,17 @@ def predict_samples(
     model_name = Path(model_file).stem
     with zipfile.ZipFile(model_file, 'r') as zipf:
 
+        logging.debug("Loading the decoding dict")
         decoding_dict = json.load(zipf.open('decoding.json'))
+
+        logging.debug("Loading probes information")
         probes_df = pd.read_csv(
             zipf.open('probes.csv'), 
             header = 0, 
             index_col = None,
         )
 
+        logging.debug("Loading calibration matrix")
         try:
             calibrators = list()
             calibration_matrix = np.load(zipf.open('calibration.npy'))
@@ -84,21 +113,27 @@ def predict_samples(
                 calibrator.load_matrix(calibration_matrix[:, :, i])
                 calibrators.append(calibrator)
         except FileNotFoundError:
+            logging.debug("No calibration matrix in zip file")
             calibrators = None
 
+        logging.debug("Loading colors dict")
         try:
             color_dict = json.load(zipf.open('colors.json'))
         except FileNotFoundError:
+            logging.debug("No colors dict in zip file")
             color_dict = None
 
+        logging.debug("Loading weight scores matrix")
         try:
             weight_matrix = np.load(zipf.open('weight_scores.npz'))
             mean_probes_per_timepoint = weight_matrix['avgsites']
             accuracy_per_timepoint_per_model = weight_matrix['performance']
             calculate_weighted_mean = True
         except FileNotFoundError:
+            logging.debug("No weight scores matrix in zip file")
             calculate_weighted_mean = False
 
+        logging.info("Starting inference session")
         so = onnxruntime.SessionOptions()
         so.inter_op_num_threads = 1
         so.intra_op_num_threads = 1
@@ -110,6 +145,7 @@ def predict_samples(
         )
 
         for bed_file in bed_files:
+            logging.info("Predicting: {}".format(bed_file))
 
             file_name = Path(bed_file).stem
             output_stem = os.path.join(
@@ -117,6 +153,7 @@ def predict_samples(
                 file_name+'_{}'.format(model_name)
             )
             
+            logging.info("Loading bed file: {}".format(bed_file))
             x = bed_to_numpy(
                 bed_df = load_bed_file(bed_file), 
                 probes_df = probes_df
@@ -155,22 +192,34 @@ def predict_samples(
             else:
                 final_scores = scores.mean(0)
 
+            top3 = final_scores.argsort(-1)[::-1][:3]
+            for i, t in enumerate(top3):
+                logging.info('Top {0}: {1:30s} ({2:4.3f})'.format(
+                    i+1, decoding_dict[str(t)], final_scores[t]
+                ))
+
             
             prediction_df = {'number_probes': n}
             for i in range(final_scores.shape[0]):
                 prediction_df[decoding_dict[str(i)]] = final_scores[i]
             prediction_df = pd.DataFrame(prediction_df, index = [0])
+            output_csv = output_stem + '.csv'
+            logging.info('Saving results to: {}'.format(output_csv))
             prediction_df.to_csv(
-                output_stem + '.csv', 
+                output_csv, 
                 header = True, 
                 index = False,
             )
 
             if plot_results:
+                output_pdf = output_stem + '.pdf'
+                logging.info('Plotting results to: {}'.format(output_pdf))
                 plot_prediction(
                     prediction_df = prediction_df,
                     color_dict = color_dict,
-                    output_file = output_stem + '.pdf'
+                    output_file = output_pdf
                 )
+            else:
+                logging.info('Skipping plotting results')
 
             

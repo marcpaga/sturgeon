@@ -1,5 +1,6 @@
 import os
 from typing import Optional, List
+import logging
 
 from sturgeon.utils import validate_model_file
 from sturgeon.prediction import predict_samples
@@ -31,9 +32,21 @@ def predict(
         '''.format(output_path)
         raise ValueError(err_msg)
 
-    for model in model_files:
-        validate_model_file(model)
+    logging.info("Found a total of {} bed files".format(len(bed_files)))
+    logging.info("Found a total of {} model files".format(len(model_files)))
+    logging.info("Results will be saved in: {}".format(output_path))
 
+    for model in model_files:
+        logging.info("Validating model: {}".format(model))
+        valid_model = validate_model_file(model)
+
+        if valid_model:
+            logging.info("Successful model validation")
+        else:
+            logging.error("Model did no pass validation, it will be skipped")
+            continue
+
+        logging.info("Starting prediction")
         predict_samples(
             bed_files = bed_files,
             model_file = model,

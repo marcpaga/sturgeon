@@ -1,10 +1,14 @@
 """
 Main program to access all subprograms
 """
-
+import logging
+import sys
+import os
+import time
 import argparse
 
 from sturgeon import __version__
+from sturgeon.logger import setup_logging
 
 def run():
 
@@ -32,7 +36,23 @@ def run():
     register_watch(subparsers)
 
     args = parser.parse_args()
+    
     cmd_func = args.func
+
+    log_dir = os.path.join(os.getcwd(),'logs')
+    log_file = os.path.join(log_dir, time.strftime("%Y%m%d-%H%M%S") + '.log')
+    if not os.path.exists(log_dir):
+        os.mkdir(log_dir)
+
+    log_setup_success = setup_logging(
+	    logfile_file = log_file,
+    )
+    if not log_setup_success:
+        print('Failed to setup the log')
+        sys.exit(1)
+    logging.info("Sturgeon start up")
+
+
     cmd_func(args)
     
 
