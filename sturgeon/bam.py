@@ -123,7 +123,7 @@ def map_methyl_calls_to_probes(
         bin_scores[current_scores < neg_threshold] = -1
 
         val, counts = np.unique(bin_scores, return_counts = True)
-        p = np.where(counts == np.max(counts))
+        p = np.where(counts == np.max(counts))[0]
 
         if len(p) > 1:
             continue

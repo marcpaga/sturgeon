@@ -1,3 +1,4 @@
+import os
 import argparse
 
 def register_predict(parser):
@@ -119,12 +120,6 @@ def register_bamtobed(parser):
         help='Path where to save the output'
     )
     subparser.add_argument(
-        '-p', '--probes-file',
-        type = str,
-        required = True,
-        help='Path where to save the probes file is (sturgeon/static/probelocs_chm13.bed)'
-    )
-    subparser.add_argument(
         '--margin',
         type = int,
         default = 25,
@@ -158,7 +153,7 @@ def run_bamtobed(args):
     bamtobed.bamtobed(
         input_path = args.input_path,
         output_path = args.output_path,
-        probes_file = args.probes_file,
+        probes_file = os.path.join(os.path.dirname(__file__), 'static', 'probes.bed'),
         margin = args.margin,
         neg_threshold = args.neg_threshold,
         pos_threshold = args.pos_threshold,

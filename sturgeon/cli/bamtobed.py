@@ -29,12 +29,6 @@ def bamtobed(
         '''.format(input_path)
         raise ValueError(err_msg)
 
-    if not os.path.isdir(output_path):
-        err_msg = '''
-        --output-path must be a directory, given: {}
-        '''.format(output_path)
-        raise ValueError(err_msg)
-
     if not os.path.exists(probes_file):
         err_msg = '''
         --probes-file not found, given: {}
@@ -96,6 +90,9 @@ def bamtobed(
                 Generated index file: {}
                 '''.format(bai_file)
             )
+
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
 
     bam_to_bed(
         input_path = bam_files,
