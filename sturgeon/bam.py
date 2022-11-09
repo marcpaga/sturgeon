@@ -115,11 +115,24 @@ def map_methyl_calls_to_probes(
     n = n[f]
 
     for ss, nn, ff in zip(s, n, f):
-        final_score = np.mean(scores[ss:nn].astype(float))
+
+        current_scores = scores[ss:nn]
+        bin_scores = np.zeros(current_scores.shape)
+
+        bin_scores[current_scores > pos_threshold] = 1
+        bin_scores[current_scores < neg_threshold] = -1
+
+        val, counts = np.unique(bin_scores, return_counts = True)
+        p = np.where(counts == np.max(counts))
+
+        if len(p) > 1:
+            continue
+
+        final_score = val[p]
         
-        if final_score > pos_threshold:
+        if final_score == 1:
             chr_probes_df.loc[ff, 'methylation_calls'] += 1
-        elif final_score < neg_threshold:
+        elif final_score == -1:
             chr_probes_df.loc[ff, 'unmethylation_calls'] += 1
         else:
             continue
