@@ -2,7 +2,7 @@ import os
 from typing import Optional, List
 import logging
 
-#from sturgeon.bam import get_calls_per_read, calls_to_bed
+from sturgeon.bam import bam_to_bed
 import pysam
 
 def bamtobed(
@@ -96,6 +96,16 @@ def bamtobed(
                 Generated index file: {}
                 '''.format(bai_file)
             )
+
+    bam_to_bed(
+        input_path = bam_files,
+        output_path = output_path,
+        probes_file = probes_file,
+        margin = margin,
+        neg_threshold = neg_threshold,
+        pos_threshold = pos_threshold,
+        processes = processes,
+    )
 
 
 
