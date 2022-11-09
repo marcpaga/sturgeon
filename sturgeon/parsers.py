@@ -96,3 +96,71 @@ def run_watch(args):
         model_files = args.model_files,
         plot_results = args.plot_results
     )
+
+def register_bamtobed(parser):
+
+    subparser = parser.add_parser(
+        'bamtobed',
+        description = 'Convert a modbam file, output of guppy to bed format',
+        help = 'Convert a modbam file, output of guppy to bed format',
+        formatter_class = argparse.ArgumentDefaultsHelpFormatter,
+    )
+
+    subparser.add_argument(
+        '-i', '--input-path',
+        type = str,
+        required = True,
+        help='Path to file (bam) or directory where the bam files are'
+    )
+    subparser.add_argument(
+        '-o', '--output-path',
+        type = str,
+        required = True,
+        help='Path where to save the output'
+    )
+    subparser.add_argument(
+        '-p', '--probes-file',
+        type = str,
+        required = True,
+        help='Path where to save the probes file is (sturgeon/static/probelocs_chm13.bed)'
+    )
+    subparser.add_argument(
+        '--margin',
+        type = int,
+        default = 25,
+        help='Neighbor methylation calls to consider when evaluating a probe location'
+    )
+    subparser.add_argument(
+        '--neg-threshold',
+        type = float,
+        default = 0.3,
+        help='Positions with scores below this threshold will be considered non-methylated'
+    )
+    subparser.add_argument(
+        '--pos-threshold',
+        type = float,
+        default = 0.7,
+        help='Positions with scores above this threshold will be considered methylated'
+    )
+    subparser.add_argument(
+        '--processes',
+        type = int,
+        default = 1,
+        help='Number of parallel processes to run'
+    )
+
+    subparser.set_defaults(func=run_bamtobed)
+
+def run_bamtobed(args):
+
+    from sturgeon.cli import bamtobed
+
+    bamtobed.bamtobed(
+        input_path = args.input_path,
+        output_path = args.output_path,
+        probes_file = args.probes_file,
+        margin = args.margin,
+        neg_threshold = args.neg_threshold,
+        pos_threshold = args.pos_threshold,
+        processes = args.processes
+    )

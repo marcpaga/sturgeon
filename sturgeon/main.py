@@ -29,11 +29,13 @@ def run():
     from sturgeon.parsers import (
         register_predict,
         register_watch,
+        register_bamtobed,
     )
     
     subparsers = parser.add_subparsers(title="sub-commands")
     register_predict(subparsers)
     register_watch(subparsers)
+    register_bamtobed(subparsers)
 
     args = parser.parse_args()
     
