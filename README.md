@@ -1,5 +1,9 @@
 # sturgeon
 
+## Requisites
+
+This tool has only been tested on Linux and python 3.7. It may work on other OS and python versions, but I would not count on it.
+
 ## Installation
 
 ```
