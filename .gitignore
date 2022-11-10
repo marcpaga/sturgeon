@@ -62,3 +62,10 @@ demo/bam/*.txt
 demo/bam/*.bed
 demo/bam/*.csv
 demo/bam/*.pdf
+demo/bam/out/*
+
+main.build
+main.dist
+main.onefile-build
+*.bin
+bin
