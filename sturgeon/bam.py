@@ -138,7 +138,7 @@ def map_methyl_calls_to_probes(
             continue
 
     chr_probes_df.loc[:, 'total_calls'] = chr_probes_df.loc[:, 'methylation_calls'] + chr_probes_df.loc[:, 'unmethylation_calls']
-    return chr_probes_df
+    return chr_probes_df, methyl_calls_per_read
 
 def merge_probes_methyl_calls(
     file_list: List[str],
@@ -230,7 +230,8 @@ def bam_to_bed(
     margin: Optional[int] = 25,
     neg_threshold: Optional[float] = 0.3,
     pos_threshold: Optional[float] = 0.7,
-    processes: Optional[int] = 1
+    processes: Optional[int] = 1,
+    save_methyl_read_calls: Optional[bool] = False,
 ):
 
     probes_df = pd.read_csv(
@@ -293,21 +294,33 @@ def bam_to_bed(
 
 
             calls_per_probe = list()
+            calls_per_read = list()
             for res in results:
-                df = res.get()
-                chrom_num = np.unique(df['chr']).item()
-                calls = df['total_calls'].sum()
+                calls_per_probe_df, calls_per_read_df = res.get()
+                chrom_num = np.unique(calls_per_probe_df['chr']).item()
+                calls = calls_per_probe_df['total_calls'].sum()
                 logging.info(
                     '''
                     Found a total of {} methylation calls on chromosome {}
                     '''.format(calls, chrom_num)
                 )
-                calls_per_probe.append(df)
+                calls_per_probe.append(calls_per_probe_df)
+                calls_per_read.append(calls_per_read_df)
             calls_per_probe = pd.concat(calls_per_probe)
 
             calls_per_probe.to_csv(
                 output_file, header = True, index = False, sep = '\t'
             )
+
+            if save_methyl_read_calls:
+                calls_per_read = pd.concat(calls_per_read)
+                ofile = os.path.join(
+                    output_path,
+                    bam_name + '_methyl_read_calls.txt'
+                )
+                calls_per_read.to_csv(
+                    ofile, header = True, index = False, sep = '\t'
+                )
 
     merged_output_file = os.path.join(
         output_path, 

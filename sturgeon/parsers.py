@@ -1,6 +1,8 @@
 import os
 import argparse
 
+from sturgeon.utils import get_available_models
+
 def register_predict(parser):
 
     subparser = parser.add_parser(
@@ -27,7 +29,10 @@ def register_predict(parser):
         type=str,
         required = True,
         nargs='+',
-        help='Model file (zip) to be used to predict. More than one can be specified'
+        help= '''
+        Model file (zip) to be used to predict. More than one can be specified.
+        These can be a path to the zip file, or one of the following built in
+        models: {} '''.format(get_available_models(print_str = True)),
     )
     subparser.add_argument(
         '-p', '--plot-results',
@@ -77,7 +82,10 @@ def register_watch(parser):
         type=str,
         required = True,
         nargs='+',
-        help='Model file (zip) to be used to predict. More than one can be specified'
+        help= '''
+        Model file (zip) to be used to predict. More than one can be specified.
+        These can be a path to the zip file, or one of the following built in
+        models: {} '''.format(get_available_models(print_str = True)),
     )
     subparser.add_argument(
         '-p', '--plot-results',
@@ -119,6 +127,13 @@ def register_bamtobed(parser):
         required = True,
         help='Path where to save the output'
     )
+
+    subparser.add_argument(
+        '--probes-file',
+        type = str,
+        default = os.path.join(os.path.dirname(__file__), 'include/static', 'probes.bed'),
+        help = 'Bed file with probe names and genomic locations'
+    )
     subparser.add_argument(
         '--margin',
         type = int,
@@ -143,6 +158,11 @@ def register_bamtobed(parser):
         default = 1,
         help='Number of parallel processes to run'
     )
+    subparser.add_argument(
+        '--save-methylreadcalls',
+        action = 'store_true',
+        help= 'Save as a text file methylation calls per read per bam file'
+    )
 
     subparser.set_defaults(func=run_bamtobed)
 
@@ -153,9 +173,46 @@ def run_bamtobed(args):
     bamtobed.bamtobed(
         input_path = args.input_path,
         output_path = args.output_path,
-        probes_file = os.path.join(os.path.dirname(__file__), 'static', 'probes.bed'),
+        probes_file = args.probes_file,
         margin = args.margin,
         neg_threshold = args.neg_threshold,
         pos_threshold = args.pos_threshold,
-        processes = args.processes
+        processes = args.processes,
+        save_methyl_read_calls = args.save_methylreadcalls
+    )
+
+def register_models(parser):
+
+    subparser = parser.add_parser(
+        'models',
+        description = 'Get info on available models',
+        help = 'Check and add models',
+        formatter_class = argparse.ArgumentDefaultsHelpFormatter,
+    )
+    subparser.add_argument(
+        "-a", "--action",
+        type = str,
+        choices = ['list', 'add', 'delete'],
+        default = 'list',
+        help = 'What to do, list the models, add models or delete models'
+    )
+
+    subparser.add_argument(
+        '--model-files',
+        type=str,
+        required = False,
+        nargs='+',
+        help='Model files to be added or deleted'
+    )
+
+    subparser.set_defaults(func=run_models)
+
+
+def run_models(args):
+
+    from sturgeon.cli import models
+
+    models.actions_models(
+        action = args.action,
+        model_files = args.model_files
     )

@@ -2,7 +2,7 @@ import os
 from typing import Optional, List
 import logging
 
-from sturgeon.utils import validate_model_file
+from sturgeon.utils import validate_model_file, get_model_path
 from sturgeon.prediction import predict_samples
 
 def predict(
@@ -37,6 +37,9 @@ def predict(
     logging.info("Results will be saved in: {}".format(output_path))
 
     for model in model_files:
+
+        model = get_model_path(model)
+
         logging.info("Validating model: {}".format(model))
         valid_model = validate_model_file(model)
 

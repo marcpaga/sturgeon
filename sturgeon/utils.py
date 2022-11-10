@@ -1,5 +1,7 @@
 import zipfile
 import logging
+import os
+from pathlib import Path
 
 import pandas as pd
 import numpy as np
@@ -97,11 +99,34 @@ def validate_bed_file(bed_df: pd.DataFrame, probes_df: pd.DataFrame):
             err_msg += "Line {i}: {v}\n".format(i = i+1, v = v)
             raise ValueError(err_msg)
 
-    
-
     return True
 
+def get_available_models(print_str = False):
 
+    model_dir = os.path.join(os.path.dirname(__file__), 'include/models')
 
+    available_models = list()
+    for model in os.listdir(model_dir):
+        if not model.endswith('.zip'):
+            continue
+        available_models.append(Path(model).stem)
+    
+    if print_str:
+        available_models = "\n".join(available_models)
 
+    return available_models
+
+def get_model_path(model_name):
+
+    if os.path.isfile(model_name):
+        return model_name
+
+    model_dir = os.path.join(os.path.dirname(__file__), 'include/models')
+    if model_name not in get_available_models():
+        err_msg = """
+        The following model could not be found in {}
+        """.format(model_dir)
+        raise ValueError(err_msg)
+
+    return os.path.join(model_dir, model_name + '.zip')
 
