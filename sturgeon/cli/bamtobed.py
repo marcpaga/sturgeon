@@ -12,7 +12,8 @@ def bamtobed(
     margin: Optional[int] = 25,
     neg_threshold: Optional[float] = 0.3,
     pos_threshold: Optional[float] = 0.7,
-    processes: Optional[int] = 1
+    processes: Optional[int] = 1,
+    save_methyl_read_calls: Optional[bool] = False,
 ):
     
     bam_files = list()
@@ -102,6 +103,7 @@ def bamtobed(
         neg_threshold = neg_threshold,
         pos_threshold = pos_threshold,
         processes = processes,
+        save_methyl_read_calls = save_methyl_read_calls,
     )
 
 
