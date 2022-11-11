@@ -316,7 +316,7 @@ def bam_to_bed(
                 calls_per_read = pd.concat(calls_per_read)
                 ofile = os.path.join(
                     output_path,
-                    bam_name + '_methyl_read_calls.txt'
+                    bam_name + '_read_methyl_calls.txt'
                 )
                 calls_per_read.to_csv(
                     ofile, header = True, index = False, sep = '\t'
