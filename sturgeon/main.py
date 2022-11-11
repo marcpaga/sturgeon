@@ -28,14 +28,14 @@ def run():
 
     from sturgeon.parsers import (
         register_predict,
-        register_watch,
+        register_livebam,
         register_bamtobed,
         register_models,
     )
     
     subparsers = parser.add_subparsers(title="sub-commands")
     register_predict(subparsers)
-    register_watch(subparsers)
+    register_livebam(subparsers)
     register_bamtobed(subparsers)
     register_models(subparsers)
 
