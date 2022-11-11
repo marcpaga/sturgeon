@@ -112,7 +112,7 @@ def get_available_models(print_str = False):
         available_models.append(Path(model).stem)
     
     if print_str:
-        available_models = "\n".join(available_models)
+        available_models = "\n"+"\n".join(available_models)
 
     return available_models
 
