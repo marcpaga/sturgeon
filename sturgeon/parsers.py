@@ -123,6 +123,12 @@ def register_livebam(parser):
         action='store_true',
         help='Also plot the results of the predictions'
     )
+    subparser.add_argument(
+        '--cooldown',
+        type = int,
+        default = 10,
+        help = 'Seconds in between checking for a new bam file'
+    )
 
     subparser.set_defaults(func=run_livebam)
 
@@ -139,7 +145,8 @@ def run_livebam(args):
         neg_threshold = args.neg_threshold,
         pos_threshold = args.pos_threshold,
         save_methyl_read_calls = args.save_methylreadcalls,
-        plot_results = args.plot_results
+        plot_results = args.plot_results,
+        cooldown = args.cooldown,
     )
 
 def register_bamtobed(parser):
