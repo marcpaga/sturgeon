@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 from copy import deepcopy
 from typing import Optional, List
-import multiprocessing
 import logging
 
 import pandas as pd
@@ -223,6 +222,43 @@ def probes_methyl_calls_to_bed(
 
     return bed_df
 
+def bam_to_calls(
+    bam_file: str,
+    probes_df: pd.DataFrame,
+    margin: int,
+    neg_threshold: float,
+    pos_threshold: float,
+):
+
+    chromosomes = np.unique(probes_df['chr'])
+
+    calls_per_probe = list()
+    calls_per_read = list()
+    for chrom in chromosomes:
+        calls_per_probe_df, calls_per_read_df = map_methyl_calls_to_probes(
+            probes_df[probes_df['chr'] == chrom.item()], 
+            bam_file, 
+            chrom.item(),
+            margin, 
+            neg_threshold,
+            pos_threshold,
+        )
+
+        chrom_num = np.unique(calls_per_probe_df['chr']).item()
+        calls = calls_per_probe_df['total_calls'].sum()
+        logging.info(
+            '''
+            Found a total of {} methylation calls on chromosome {}
+            '''.format(calls, chrom_num)
+        )
+        calls_per_probe.append(calls_per_probe_df)
+        calls_per_read.append(calls_per_read_df)
+            
+    calls_per_probe = pd.concat(calls_per_probe)
+    calls_per_read = pd.concat(calls_per_read)
+
+    return calls_per_probe, calls_per_read
+
 def bam_to_bed(
     input_path: List[str],
     output_path: str,
@@ -230,7 +266,6 @@ def bam_to_bed(
     margin: Optional[int] = 25,
     neg_threshold: Optional[float] = 0.3,
     pos_threshold: Optional[float] = 0.7,
-    processes: Optional[int] = 1,
     save_methyl_read_calls: Optional[bool] = False,
 ):
 
@@ -245,82 +280,55 @@ def bam_to_bed(
     probes_df['unmethylation_calls'] = 0
     probes_df['total_calls'] = 0
 
-    chromosomes = np.unique(probes_df['chr'])
-
     output_files = list()
 
-    with multiprocessing.Pool(processes) as pool:
+    for bam_file in input_path:
 
-        for bam_file in input_path:
+        logging.info(
+            '''
+            Getting methylation calls from: {}
+            '''.format(bam_file)
+        )
+        
+        bam_name = Path(bam_file).stem
 
+        output_file = os.path.join(
+            output_path,
+            bam_name + '_probes_methyl_calls.txt'
+        )
+        output_files.append(output_file)
+
+        if os.path.exists(output_file):
             logging.info(
                 '''
-                Getting methylation calls from: {}
-                '''.format(bam_file)
+                Skipping, probe_methyl_calls exists: {}
+                '''.format(output_file)
             )
-            
-            bam_name = Path(bam_file).stem
+            continue
 
-            output_file = os.path.join(
+        probes_methyl_df = deepcopy(probes_df)
+        logging.info('Processing bam file: {}'.format(bam_file))
+
+        calls_per_probe, calls_per_read = bam_to_calls(
+            bam_file = bam_file,
+            probes_df = probes_methyl_df,
+            margin = margin,
+            neg_threshold = neg_threshold,
+            pos_threshold = pos_threshold,
+        )
+
+        calls_per_probe.to_csv(
+            output_file, header = True, index = False, sep = '\t'
+        )
+
+        if save_methyl_read_calls:
+            ofile = os.path.join(
                 output_path,
-                bam_name + '_probes_methyl_calls.txt'
+                bam_name + '_read_methyl_calls.txt'
             )
-            output_files.append(output_file)
-
-            if os.path.exists(output_file):
-                logging.info(
-                    '''
-                    Skipping, probe_methyl_calls exists: {}
-                    '''.format(output_file)
-                )
-                continue
-
-            probes_methyl_df = deepcopy(probes_df)
-            logging.info('Processing bam file: {}'.format(bam_file))
-
-            results = list()
-            for chrom in chromosomes:
-                results.append(pool.apply_async(
-                    map_methyl_calls_to_probes,
-                    (
-                        probes_methyl_df[probes_methyl_df['chr'] == chrom.item()], 
-                        bam_file, 
-                        chrom.item(),
-                        margin, 
-                        neg_threshold,
-                        pos_threshold,
-                    )
-                ))
-
-
-            calls_per_probe = list()
-            calls_per_read = list()
-            for res in results:
-                calls_per_probe_df, calls_per_read_df = res.get()
-                chrom_num = np.unique(calls_per_probe_df['chr']).item()
-                calls = calls_per_probe_df['total_calls'].sum()
-                logging.info(
-                    '''
-                    Found a total of {} methylation calls on chromosome {}
-                    '''.format(calls, chrom_num)
-                )
-                calls_per_probe.append(calls_per_probe_df)
-                calls_per_read.append(calls_per_read_df)
-            calls_per_probe = pd.concat(calls_per_probe)
-
-            calls_per_probe.to_csv(
-                output_file, header = True, index = False, sep = '\t'
+            calls_per_read.to_csv(
+                ofile, header = True, index = False, sep = '\t'
             )
-
-            if save_methyl_read_calls:
-                calls_per_read = pd.concat(calls_per_read)
-                ofile = os.path.join(
-                    output_path,
-                    bam_name + '_read_methyl_calls.txt'
-                )
-                calls_per_read.to_csv(
-                    ofile, header = True, index = False, sep = '\t'
-                )
 
     merged_output_file = os.path.join(
         output_path, 

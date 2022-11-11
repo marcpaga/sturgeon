@@ -53,15 +53,17 @@ def run_predict(args):
         plot_results = args.plot_results
     )
 
-def register_watch(parser):
+def register_livebam(parser):
 
     subparser = parser.add_parser(
-        'watch',
+        'livebam',
         description = '''
         Run a process that watches over a directory and predicts as the samples 
         are written into it. It assumes that each file written in the folder 
-        comes from the same sample and are of a later timepoint''',
-        help = 'Predict methylation samples in bed format',
+        comes from the same sample and are of a later timepoint.
+        This program never ends, as it keeps watching the input folder for new
+        files, therefore this has to be terminated manually.''',
+        help = 'Predict methylation samples from format',
         formatter_class = argparse.ArgumentDefaultsHelpFormatter,
     )
 
@@ -69,7 +71,7 @@ def register_watch(parser):
         '-i', '--input-path',
         type = str,
         required = True,
-        help='Path to file (bed) or directory where the bed files are'
+        help='Path where the bam files are written by the basecaller'
     )
     subparser.add_argument(
         '-o', '--output-path',
@@ -88,21 +90,55 @@ def register_watch(parser):
         models: {} '''.format(get_available_models(print_str = True)),
     )
     subparser.add_argument(
+        '--probes-file',
+        type = str,
+        default = os.path.join(os.path.dirname(__file__), 'include/static', 'probes.bed'),
+        help = 'Bed file with probe names and genomic locations'
+    )
+    subparser.add_argument(
+        '--margin',
+        type = int,
+        default = 25,
+        help='Neighbor methylation calls to consider when evaluating a probe location'
+    )
+    subparser.add_argument(
+        '--neg-threshold',
+        type = float,
+        default = 0.3,
+        help='Positions with scores below this threshold will be considered non-methylated'
+    )
+    subparser.add_argument(
+        '--pos-threshold',
+        type = float,
+        default = 0.7,
+        help='Positions with scores above this threshold will be considered methylated'
+    )
+    subparser.add_argument(
+        '--save-methylreadcalls',
+        action = 'store_true',
+        help= 'Save as a text file methylation calls per read per bam file'
+    )
+    subparser.add_argument(
         '-p', '--plot-results',
         action='store_true',
         help='Also plot the results of the predictions'
     )
 
-    subparser.set_defaults(func=run_watch)
+    subparser.set_defaults(func=run_livebam)
 
-def run_watch(args):
+def run_livebam(args):
 
-    from sturgeon.cli import watch
+    from sturgeon.cli import livebam
 
-    watch(
+    livebam.livebam(
         input_path = args.input_path,
         output_path = args.output_path,
         model_files = args.model_files,
+        probes_file = args.probes_file,
+        margin = args.margin,
+        neg_threshold = args.neg_threshold,
+        pos_threshold = args.pos_threshold,
+        save_methyl_read_calls = args.save_methylreadcalls,
         plot_results = args.plot_results
     )
 
@@ -153,12 +189,6 @@ def register_bamtobed(parser):
         help='Positions with scores above this threshold will be considered methylated'
     )
     subparser.add_argument(
-        '--processes',
-        type = int,
-        default = 1,
-        help='Number of parallel processes to run'
-    )
-    subparser.add_argument(
         '--save-methylreadcalls',
         action = 'store_true',
         help= 'Save as a text file methylation calls per read per bam file'
@@ -177,7 +207,6 @@ def run_bamtobed(args):
         margin = args.margin,
         neg_threshold = args.neg_threshold,
         pos_threshold = args.pos_threshold,
-        processes = args.processes,
         save_methyl_read_calls = args.save_methylreadcalls
     )
 

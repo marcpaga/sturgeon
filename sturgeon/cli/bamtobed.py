@@ -12,7 +12,6 @@ def bamtobed(
     margin: Optional[int] = 25,
     neg_threshold: Optional[float] = 0.3,
     pos_threshold: Optional[float] = 0.7,
-    processes: Optional[int] = 1,
     save_methyl_read_calls: Optional[bool] = False,
 ):
     
@@ -60,12 +59,6 @@ def bamtobed(
         --margin must be zero or a positive integer, given: {}
         '''.format(margin)
         raise ValueError(err_msg)
-    
-    if processes < 1:
-        err_msg = '''
-        --processes must be a positive integer, given: {}
-        '''.format(processes)
-        raise ValueError(err_msg)
 
 
     logging.info("Found a total of {} bam files".format(len(bam_files)))
@@ -102,7 +95,6 @@ def bamtobed(
         margin = margin,
         neg_threshold = neg_threshold,
         pos_threshold = pos_threshold,
-        processes = processes,
         save_methyl_read_calls = save_methyl_read_calls,
     )
 
