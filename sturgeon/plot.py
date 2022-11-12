@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+import matplotlib.backends.backend_pdf # required for compilation
 
 def plot_prediction(
     prediction_df: pd.DataFrame,
