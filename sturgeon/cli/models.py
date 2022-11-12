@@ -8,6 +8,9 @@ from sturgeon.utils import get_available_models, validate_model_file
 
 def actions_models(action, model_files):
 
+    logging.info("Sturgeon start up")
+    logging.info("Model program")
+
     if action == 'list':
         list_models()
     elif action == 'add':

@@ -15,6 +15,9 @@ def bamtobed(
     save_methyl_read_calls: Optional[bool] = False,
 ):
     
+    logging.info("Sturgeon start up")
+    logging.info("Bam to bed program")
+
     bam_files = list()
     if os.path.isfile(input_path):
         bam_files.append(input_path)

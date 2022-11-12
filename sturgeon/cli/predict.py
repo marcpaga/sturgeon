@@ -11,6 +11,9 @@ def predict(
     output_path: str,
     plot_results: Optional[bool] = False,
 ):
+
+    logging.info("Sturgeon start up")
+    logging.info("Prediction program")
     
     bed_files = list()
     if os.path.isfile(input_path):

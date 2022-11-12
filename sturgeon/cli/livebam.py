@@ -32,6 +32,9 @@ def livebam(
     """
     """
 
+    logging.info("Sturgeon start up")
+    logging.info("Live bam prediction program")
+
     logging.info('Starting live prediction from bam files')
     logging.info('Watching the following folder: {}'.format(input_path))
 

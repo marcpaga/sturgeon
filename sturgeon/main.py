@@ -54,9 +54,7 @@ def run():
     if not log_setup_success:
         print('Failed to setup the log')
         sys.exit(1)
-    logging.info("Sturgeon start up")
-
-
+    
     cmd_func(args)
     
 
