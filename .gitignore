@@ -64,6 +64,7 @@ demo/bam/*.csv
 demo/bam/*.pdf
 demo/bam/out/*
 demo/bam/tmp/*
+demo/bam/out_live/*
 
 main.build
 main.dist

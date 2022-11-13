@@ -4,7 +4,11 @@ from typing import List
 import time
 from pathlib import Path
 from copy import deepcopy
+import shutil
+import zipfile
+import json
 
+import numpy as np
 import pandas as pd
 import pysam
 
@@ -13,8 +17,9 @@ from sturgeon.bam import (
     merge_probes_methyl_calls,
     probes_methyl_calls_to_bed,
 )
-from sturgeon.utils import validate_model_file, get_model_path
+from sturgeon.utils import validate_model_file, get_model_path, creation_date
 from sturgeon.prediction import predict_samples
+from sturgeon.plot import plot_prediction, plot_prediction_over_time
 
 
 def livebam(
@@ -25,7 +30,6 @@ def livebam(
     margin: int,
     neg_threshold: float,
     pos_threshold: float,
-    save_methyl_read_calls: bool,
     plot_results: bool,
     cooldown: int,
 ):
@@ -38,6 +42,7 @@ def livebam(
     logging.info('Starting live prediction from bam files')
     logging.info('Watching the following folder: {}'.format(input_path))
 
+    # keep track of processed bam files
     bam_files = dict()
 
     probes_df = pd.read_csv(
@@ -53,19 +58,41 @@ def livebam(
 
     while True:
 
-        logging.info('Looking for new bam files, so far found {}'.format(len(bam_files)))
+        logging.info(
+            '''
+            Looking for new bam files, so far found {}
+            '''.format(len(bam_files))
+        )
+
+        # get all available bam files and sort them by timestamp so that we
+        # process them in an orderly manner
+        available_bam_files = list()
+        available_bam_timestamps = list()
         for file in os.listdir(input_path):
             if not file.endswith('.bam'):
                 continue
+            f = os.path.join(input_path, file)
+            available_bam_files.append(f)
+            available_bam_timestamps.append(creation_date(f))
+
+        available_bam_files = np.array(available_bam_files)
+        available_bam_timestamps = np.array(available_bam_timestamps)
+        creation_order = np.argsort(available_bam_timestamps)
+
+        available_bam_files = available_bam_files[creation_order]
+        available_bam_timestamps = available_bam_timestamps[creation_order]
+
+        for file_path, timestamp in zip(available_bam_files, available_bam_timestamps):
             
-            file_name = Path(file).stem
-            file_path = os.path.join(input_path, file)
+            file_name = Path(file_path).stem
             try:
+                # already processed bam file, skip
                 bam_files[file_name]
                 continue
             except KeyError:
                 logging.info('New bam file found: {}'.format(file_path))
                 
+            # generate index file if not existing
             bai_file = file_path + '.bai'
             if not os.path.exists(bai_file):
                 logging.info(
@@ -78,10 +105,17 @@ def livebam(
                     Generating index file: {}
                     '''.format(bai_file)
                 )
+                # sometimes we catch the bam file mid write up, try again
+                # in the next iteration
                 try:
                     pysam.index(file_path)
                 except pysam.utils.SamtoolsError:
-                    logging.warning('Making index file failed, bam file might not be complete yet, will try again later')
+                    logging.warning(
+                        '''
+                        Making index file failed, bam file might not be 
+                        complete yet, will try again later
+                        '''
+                    )
                     continue
 
                 logging.info(
@@ -90,42 +124,56 @@ def livebam(
                     '''.format(bai_file)
                 )
 
+            # extract methylation calls from the bam file
             logging.info('Getting methylation calls from file')
-            calls_per_probe, calls_per_read = bam_to_calls(
-                bam_file = file_path,
-                probes_df = deepcopy(probes_df),
-                margin = margin,
-                neg_threshold = neg_threshold,
-                pos_threshold = pos_threshold,
+            calls_per_probe_file = os.path.join(
+                output_path, 
+                file_name + '_probes_methyl_calls.txt',
             )
-
-            calls_per_probe_file = os.path.join(output_path, file_name + '_probes_methyl_calls.txt')
-            calls_per_probe.to_csv(
-                calls_per_probe_file,
-                header = True, index = False, sep = '\t'
+            calls_per_read_file = os.path.join(
+                output_path, 
+                file_name + '_read_methyl_calls.txt'
             )
-
-            if save_methyl_read_calls:
+            if not os.path.isfile(calls_per_probe_file) or not os.path.isfile(calls_per_read_file):
+                
+                calls_per_probe, calls_per_read = bam_to_calls(
+                    bam_file = file_path,
+                    probes_df = deepcopy(probes_df),
+                    margin = margin,
+                    neg_threshold = neg_threshold,
+                    pos_threshold = pos_threshold,
+                )
+                calls_per_probe.to_csv(
+                    calls_per_probe_file,
+                    header = True, index = False, sep = '\t'
+                )
                 calls_per_read.to_csv(
-                    os.path.join(output_path, file_name + '_read_methyl_calls.txt'), 
+                    calls_per_read_file, 
                     header = True, index = False, sep = '\t'
                 )
 
-            merged_output_file = os.path.join(output_path, 'merged_probes_methyl_calls_{}.txt'.format(len(bam_files)))
+            merged_output_file = os.path.join(
+                output_path, 
+                'merged_probes_methyl_calls_{}.txt'.format(len(bam_files))
+            )
+
+            # if this is the first processed file, there's no need to merge
             if len(bam_files) == 0:
-                merge_probes_methyl_calls(
-                    [calls_per_probe_file], 
-                    merged_output_file
-                )
+                shutil.copyfile(calls_per_probe_file, merged_output_file)
+            # here we merge the current probe file with the previous merge file
             else:
                 merge_probes_methyl_calls(
                     [
                         calls_per_probe_file,
-                        os.path.join(output_path, 'merged_probes_methyl_calls_{}.txt'.format(len(bam_files)-1))
+                        os.path.join(
+                            output_path, 
+                            'merged_probes_methyl_calls_{}.txt'.format(len(bam_files)-1)
+                        )
                     ], 
                     merged_output_file
                 )
 
+            # conver the probe file to bed, so that we can predict
             bed_output_file = os.path.join(
                 output_path,
                 'merged_probes_methyl_calls_{}.bed'.format(len(bam_files))
@@ -135,8 +183,10 @@ def livebam(
                 bed_output_file
             )
 
+            # add to bam_files as we consider this file processed
             bam_files[file_name] = file_path
 
+            # make a prediction with each model
             for model in model_files:
 
                 model = get_model_path(model)
@@ -147,17 +197,83 @@ def livebam(
                 if valid_model:
                     logging.info("Successful model validation")
                 else:
-                    logging.error("Model did no pass validation, it will be skipped")
+                    logging.error(
+                        '''
+                        Model did no pass validation, it will be skipped
+                        '''
+                    )
                     continue
 
                 logging.info("Starting prediction")
-                predict_samples(
+                prediction = predict_samples(
                     bed_files = [bed_output_file],
                     model_file = model,
-                    output_dir = output_path,
-                    plot_results = plot_results,
+                )
+                prediction = list(prediction.values())[0]
+                prediction['timestamp'] = timestamp
+
+                output_csv = os.path.join(
+                    output_path, 
+                    'predictions_{}.csv'.format(Path(model).stem)
+                )
+                prediction.to_csv(
+                    output_csv,
+                    mode = 'a',
+                    index = False,
+                    header = not os.path.exists(output_csv),
                 )
 
-        logging.info('No new bam files found, sleeping for {} seconds'.format(cooldown))
+                if plot_results:
+
+                    # plot the last prediction
+                    output_pdf = os.path.join(
+                        output_path, 
+                        'predictions_{}_{}.pdf'.format(
+                            len(bam_files)-1,
+                            Path(model).stem,
+                        )
+                    )
+                    logging.info('Plotting results to: {}'.format(output_pdf))
+
+                    with zipfile.ZipFile(model, 'r') as zipf:
+                        logging.debug("Loading colors dict")
+                        try:
+                            color_dict = json.load(zipf.open('colors.json'))
+                        except FileNotFoundError:
+                            logging.debug("No colors dict in zip file")
+                            color_dict = None
+                    
+                    plot_prediction(
+                        prediction_df = prediction,
+                        color_dict = color_dict,
+                        output_file = output_pdf
+                    )
+
+                    output_pdf = os.path.join(
+                        output_path, 
+                        'predictions_overtime_{}.pdf'.format(
+                            Path(model).stem,
+                        )
+                    )
+                    predictions_time = pd.read_csv(
+                        output_csv,
+                        header = 0,
+                        index_col = None,
+                    )
+                    plot_prediction_over_time(
+                        prediction_df = predictions_time,
+                        color_dict = color_dict,
+                        output_file = output_pdf,
+                    )
+
+                else:
+                    logging.info('Skipping plotting results')
+
+
+        logging.info(
+            '''
+            No new bam files found, sleeping for {} seconds
+            '''.format(cooldown)
+        )
         time.sleep(cooldown)
 
