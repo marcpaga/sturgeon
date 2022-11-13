@@ -266,7 +266,6 @@ def bam_to_bed(
     margin: Optional[int] = 25,
     neg_threshold: Optional[float] = 0.3,
     pos_threshold: Optional[float] = 0.7,
-    save_methyl_read_calls: Optional[bool] = False,
 ):
 
     probes_df = pd.read_csv(
@@ -320,15 +319,13 @@ def bam_to_bed(
         calls_per_probe.to_csv(
             output_file, header = True, index = False, sep = '\t'
         )
-
-        if save_methyl_read_calls:
-            ofile = os.path.join(
-                output_path,
-                bam_name + '_read_methyl_calls.txt'
-            )
-            calls_per_read.to_csv(
-                ofile, header = True, index = False, sep = '\t'
-            )
+        ofile = os.path.join(
+            output_path,
+            bam_name + '_read_methyl_calls.txt'
+        )
+        calls_per_read.to_csv(
+            ofile, header = True, index = False, sep = '\t'
+        )
 
     merged_output_file = os.path.join(
         output_path, 

@@ -114,11 +114,6 @@ def register_livebam(parser):
         help='Positions with scores above this threshold will be considered methylated'
     )
     subparser.add_argument(
-        '--save-methylreadcalls',
-        action = 'store_true',
-        help= 'Save as a text file methylation calls per read per bam file'
-    )
-    subparser.add_argument(
         '-p', '--plot-results',
         action='store_true',
         help='Also plot the results of the predictions'
@@ -144,7 +139,6 @@ def run_livebam(args):
         margin = args.margin,
         neg_threshold = args.neg_threshold,
         pos_threshold = args.pos_threshold,
-        save_methyl_read_calls = args.save_methylreadcalls,
         plot_results = args.plot_results,
         cooldown = args.cooldown,
     )
@@ -195,11 +189,6 @@ def register_bamtobed(parser):
         default = 0.7,
         help='Positions with scores above this threshold will be considered methylated'
     )
-    subparser.add_argument(
-        '--save-methylreadcalls',
-        action = 'store_true',
-        help= 'Save as a text file methylation calls per read per bam file'
-    )
 
     subparser.set_defaults(func=run_bamtobed)
 
@@ -214,7 +203,6 @@ def run_bamtobed(args):
         margin = args.margin,
         neg_threshold = args.neg_threshold,
         pos_threshold = args.pos_threshold,
-        save_methyl_read_calls = args.save_methylreadcalls
     )
 
 def register_models(parser):

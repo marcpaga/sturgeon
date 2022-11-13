@@ -12,7 +12,6 @@ def bamtobed(
     margin: Optional[int] = 25,
     neg_threshold: Optional[float] = 0.3,
     pos_threshold: Optional[float] = 0.7,
-    save_methyl_read_calls: Optional[bool] = False,
 ):
     
     logging.info("Sturgeon start up")
@@ -98,7 +97,6 @@ def bamtobed(
         margin = margin,
         neg_threshold = neg_threshold,
         pos_threshold = pos_threshold,
-        save_methyl_read_calls = save_methyl_read_calls,
     )
 
 
