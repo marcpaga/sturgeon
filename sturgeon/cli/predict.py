@@ -1,9 +1,13 @@
 import os
 from typing import Optional, List
 import logging
+import zipfile
+import json
+from pathlib import Path
 
 from sturgeon.utils import validate_model_file, get_model_path
 from sturgeon.prediction import predict_samples
+from sturgeon.plot import plot_prediction
 
 def predict(
     input_path: List[str],
@@ -53,12 +57,46 @@ def predict(
             continue
 
         logging.info("Starting prediction")
-        predict_samples(
+        predictions = predict_samples(
             bed_files = bed_files,
             model_file = model,
-            output_dir = output_path,
-            plot_results = plot_results,
         )
+
+        for bed_name, prediction_df in predictions.items():
+
+            output_csv = os.path.join(
+                output_path, 
+                bed_name + '_{}.csv'.format(Path(model).stem)
+            )
+            logging.info('Saving results to: {}'.format(output_csv))
+            prediction_df.to_csv(
+                output_csv, 
+                header = True, 
+                index = False,
+            )
+
+            if plot_results:
+                output_pdf = os.path.join(
+                    output_path, 
+                    bed_name + '_{}.pdf'.format(Path(model).stem)
+                )
+                logging.info('Plotting results to: {}'.format(output_pdf))
+
+                with zipfile.ZipFile(model, 'r') as zipf:
+                    logging.debug("Loading colors dict")
+                    try:
+                        color_dict = json.load(zipf.open('colors.json'))
+                    except FileNotFoundError:
+                        logging.debug("No colors dict in zip file")
+                        color_dict = None
+                
+                plot_prediction(
+                    prediction_df = prediction_df,
+                    color_dict = color_dict,
+                    output_file = output_pdf
+                )
+            else:
+                logging.info('Skipping plotting results')
 
 
 

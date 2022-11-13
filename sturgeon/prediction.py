@@ -82,14 +82,12 @@ def predict_sample(
 
     return uncalibrated_scores
 
+
 def predict_samples(
     model_file: str, 
     bed_files: List[str], 
-    output_dir: str,
-    plot_results: Optional[bool] = False,
 ):
 
-    model_name = Path(model_file).stem
     with zipfile.ZipFile(model_file, 'r') as zipf:
 
         logging.debug("Loading the decoding dict")
@@ -116,13 +114,6 @@ def predict_samples(
             logging.debug("No calibration matrix in zip file")
             calibrators = None
 
-        logging.debug("Loading colors dict")
-        try:
-            color_dict = json.load(zipf.open('colors.json'))
-        except FileNotFoundError:
-            logging.debug("No colors dict in zip file")
-            color_dict = None
-
         logging.debug("Loading weight scores matrix")
         try:
             weight_matrix = np.load(zipf.open('weight_scores.npz'))
@@ -144,14 +135,12 @@ def predict_samples(
             sess_options = so,
         )
 
+        all_results = dict()
+
         for bed_file in bed_files:
             logging.info("Predicting: {}".format(bed_file))
 
             file_name = Path(bed_file).stem
-            output_stem = os.path.join(
-                output_dir, 
-                file_name+'_{}'.format(model_name)
-            )
             
             logging.info("Loading bed file: {}".format(bed_file))
             x = bed_to_numpy(
@@ -203,23 +192,9 @@ def predict_samples(
             for i in range(final_scores.shape[0]):
                 prediction_df[decoding_dict[str(i)]] = final_scores[i]
             prediction_df = pd.DataFrame(prediction_df, index = [0])
-            output_csv = output_stem + '.csv'
-            logging.info('Saving results to: {}'.format(output_csv))
-            prediction_df.to_csv(
-                output_csv, 
-                header = True, 
-                index = False,
-            )
+            
+            all_results[file_name] = prediction_df
 
-            if plot_results:
-                output_pdf = output_stem + '.pdf'
-                logging.info('Plotting results to: {}'.format(output_pdf))
-                plot_prediction(
-                    prediction_df = prediction_df,
-                    color_dict = color_dict,
-                    output_file = output_pdf
-                )
-            else:
-                logging.info('Skipping plotting results')
+    return all_results
 
             
