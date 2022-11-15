@@ -14,7 +14,13 @@ def run():
 
     parser = argparse.ArgumentParser(
         prog="Sturgeon",
-        description="Sturgeon\nCNS classifer",
+        description='''
+        Sturgeon\nCNS classifer
+        \n
+        \n
+        This software is provided as indicated in the LICENSE file, by using
+        this software you agree with the terms in the LICENSE file.
+        ''',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
