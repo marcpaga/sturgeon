@@ -122,6 +122,9 @@ def map_methyl_calls_to_probes(
         bin_scores[current_scores < neg_threshold] = -1
 
         bin_scores = bin_scores[bin_scores != 0]
+        if len(bin_scores) == 0:
+            continue
+        
         final_score = int(np.median(bin_scores))
         
         if final_score == 1:
