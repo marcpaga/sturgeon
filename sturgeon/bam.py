@@ -121,13 +121,8 @@ def map_methyl_calls_to_probes(
         bin_scores[current_scores > pos_threshold] = 1
         bin_scores[current_scores < neg_threshold] = -1
 
-        val, counts = np.unique(bin_scores, return_counts = True)
-        p = np.where(counts == np.max(counts))[0]
-
-        if len(p) > 1:
-            continue
-
-        final_score = val[p]
+        bin_scores = bin_scores[bin_scores != 0]
+        final_score = int(np.median(bin_scores))
         
         if final_score == 1:
             chr_probes_df.loc[ff, 'methylation_calls'] += 1
