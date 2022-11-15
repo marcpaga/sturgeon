@@ -93,6 +93,12 @@ def predict_samples(
         logging.debug("Loading the decoding dict")
         decoding_dict = json.load(zipf.open('decoding.json'))
 
+        try:
+            merge_dict = json.load(zipf.open('merge.json'))
+            requires_merging = True
+        except FileNotFoundError:
+            requires_merging = False
+
         logging.debug("Loading probes information")
         probes_df = pd.read_csv(
             zipf.open('probes.csv'), 
@@ -181,17 +187,27 @@ def predict_samples(
             else:
                 final_scores = scores.mean(0)
 
-            top3 = final_scores.argsort(-1)[::-1][:3]
-            for i, t in enumerate(top3):
-                logging.info('Top {0}: {1:30s} ({2:4.3f})'.format(
-                    i+1, decoding_dict[str(t)], final_scores[t]
-                ))
-
-            
             prediction_df = {'number_probes': n}
             for i in range(final_scores.shape[0]):
                 prediction_df[decoding_dict[str(i)]] = final_scores[i]
             prediction_df = pd.DataFrame(prediction_df, index = [0])
+
+            if requires_merging:
+                for k, v in merge_dict.items():
+                    prediction_df[k] = 0
+                    for c in v:
+                        prediction_df[k] += prediction_df[c]
+                        prediction_df = prediction_df.drop(c, axis=1)
+
+            column_names = np.array(prediction_df.columns)[1:]
+            final_scores = np.array(prediction_df[column_names])
+
+            top3 = final_scores.argsort(-1)[::-1][:3]
+            for i, t in enumerate(top3):
+                logging.info('Top {0}: {1:30s} ({2:4.3f})'.format(
+                    i+1, column_names[t], final_scores[t]
+                ))
+
             
             all_results[file_name] = prediction_df
 
