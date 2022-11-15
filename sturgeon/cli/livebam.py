@@ -56,6 +56,9 @@ def livebam(
     probes_df['unmethylation_calls'] = 0
     probes_df['total_calls'] = 0
 
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+
     while True:
 
         logging.info(
