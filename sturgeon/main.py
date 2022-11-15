@@ -20,6 +20,9 @@ def run():
         \n
         This software is provided as indicated in the LICENSE file, by using
         this software you agree with the terms in the LICENSE file.
+        \n
+        \n
+        © 2022 de Ridder lab
         ''',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
