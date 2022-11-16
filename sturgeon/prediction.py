@@ -200,7 +200,7 @@ def predict_samples(
                         prediction_df = prediction_df.drop(c, axis=1)
 
             column_names = np.array(prediction_df.columns)[1:]
-            final_scores = np.array(prediction_df[column_names])
+            final_scores = np.array(prediction_df[column_names])[0]
 
             top3 = final_scores.argsort(-1)[::-1][:3]
             for i, t in enumerate(top3):
@@ -208,8 +208,10 @@ def predict_samples(
                     i+1, column_names[t], final_scores[t]
                 ))
 
+            final_column_order = ['number_probes'] + np.sort(column_names).tolist()
+
             
-            all_results[file_name] = prediction_df
+            all_results[file_name] = prediction_df[final_column_order]
 
     return all_results
 

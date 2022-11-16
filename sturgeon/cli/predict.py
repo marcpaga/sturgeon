@@ -35,7 +35,7 @@ def predict(
 
     if not os.path.isdir(output_path):
         err_msg = '''
-        --output-path must be a directory, given: {}
+        --output-path must be a directory that exists, given: {}
         '''.format(output_path)
         raise ValueError(err_msg)
 

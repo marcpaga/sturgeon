@@ -15,11 +15,11 @@ def run():
     parser = argparse.ArgumentParser(
         prog="Sturgeon",
         description='''
-        Sturgeon\nCNS classifer
+        Sturgeon - CNS classifer - 
         \n
         \n
         This software is provided as indicated in the LICENSE file, by using
-        this software you agree with the terms in the LICENSE file.
+        this software you agree with the terms in the LICENSE file. - 
         \n
         \n
         © 2022 de Ridder lab
