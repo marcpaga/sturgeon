@@ -1,7 +1,6 @@
 """
 Main program to access all subprograms
 """
-import logging
 import sys
 import os
 import time
@@ -37,15 +36,15 @@ def run():
 
     from sturgeon.parsers import (
         register_predict,
-        register_livebam,
-        register_bamtobed,
+        register_live,
+        register_inputtobed,
         register_models,
     )
     
     subparsers = parser.add_subparsers(title="sub-commands")
     register_predict(subparsers)
-    register_livebam(subparsers)
-    register_bamtobed(subparsers)
+    register_live(subparsers)
+    register_inputtobed(subparsers)
     register_models(subparsers)
 
     args = parser.parse_args()

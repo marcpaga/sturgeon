@@ -53,10 +53,10 @@ def run_predict(args):
         plot_results = args.plot_results
     )
 
-def register_livebam(parser):
+def register_live(parser):
 
     subparser = parser.add_parser(
-        'livebam',
+        'live',
         description = '''
         Run a process that watches over a directory and predicts as the samples 
         are written into it. It assumes that each file written in the folder 
@@ -88,6 +88,18 @@ def register_livebam(parser):
         Model file (zip) to be used to predict. More than one can be specified.
         These can be a path to the zip file, or one of the following built in
         models: {} '''.format(get_available_models(print_str = True)),
+    )
+    subparser.add_argument(
+        '-s', '--source',
+        type=str,
+        required = True,
+        choices = ['guppy', 'megalodon_one', 'megalodon_multi'],
+        help = '''
+        Which software was used to output the input files.
+        'guppy' for alignment files (.bam). 
+        'megalodon_one' for a single file with per read calls
+        'megalodon_multi' for multuple files with per read calls
+        '''
     )
     subparser.add_argument(
         '--probes-file',
@@ -125,13 +137,13 @@ def register_livebam(parser):
         help = 'Seconds in between checking for a new bam file'
     )
 
-    subparser.set_defaults(func=run_livebam)
+    subparser.set_defaults(func=run_live)
 
-def run_livebam(args):
+def run_live(args):
 
-    from sturgeon.cli import livebam
+    from sturgeon.cli import live
 
-    livebam.livebam(
+    live.live(
         input_path = args.input_path,
         output_path = args.output_path,
         model_files = args.model_files,
@@ -143,12 +155,12 @@ def run_livebam(args):
         cooldown = args.cooldown,
     )
 
-def register_bamtobed(parser):
+def register_inputtobed(parser):
 
     subparser = parser.add_parser(
-        'bamtobed',
-        description = 'Convert a modbam file, output of guppy to bed format',
-        help = 'Convert a modbam file, output of guppy to bed format',
+        'inputtobed',
+        description = 'Convert an input file, output of guppy or megalodon to bed format',
+        help = 'Convert an input file, output of guppy or megalodon to bed format',
         formatter_class = argparse.ArgumentDefaultsHelpFormatter,
     )
 
@@ -163,6 +175,13 @@ def register_bamtobed(parser):
         type = str,
         required = True,
         help='Path where to save the output'
+    )
+    subparser.add_argument(
+        '-s', '--source',
+        type = str,
+        required = True,
+        choices = ['guppy', 'megalodon'],
+        help='Output file format'
     )
 
     subparser.add_argument(
@@ -190,15 +209,16 @@ def register_bamtobed(parser):
         help='Positions with scores above this threshold will be considered methylated'
     )
 
-    subparser.set_defaults(func=run_bamtobed)
+    subparser.set_defaults(func=run_inputtobed)
 
-def run_bamtobed(args):
+def run_inputtobed(args):
 
-    from sturgeon.cli import bamtobed
+    from sturgeon.cli import inputtobed
 
-    bamtobed.bamtobed(
+    inputtobed.filetobed(
         input_path = args.input_path,
         output_path = args.output_path,
+        source = args.source,
         probes_file = args.probes_file,
         margin = args.margin,
         neg_threshold = args.neg_threshold,

@@ -73,6 +73,41 @@ def load_bed_file(bed_file: str):
     )
     return bed_df
 
+def validate_megalodon_file(megalodon_file):
+    """Very simple check of the first line in the file to check
+    for correct column names.
+
+    Args:
+        megalodon_file (str): path to the file to be validated
+
+    Returns:
+        (bool, str): True, None if it passes the validation; False, error message
+        if it failes.
+    """
+
+    mandatory_columns = [
+        "read_id", 
+        "chrm",
+        "strand",
+        "pos",
+        "mod_log_prob",
+        "can_log_prob",
+        "mod_base",
+    ]
+
+    with open(megalodon_file, 'r') as f:
+        for line in f:
+            break
+
+    column_names = line.strip('\n').split('\t')
+    for mc in mandatory_columns:
+        if mc not in column_names:
+            err_msg = "{} column missing in megalodon file".format(mc)
+            return False, err_msg
+
+    return True, None
+
+
 def validate_bed_file(bed_df: pd.DataFrame, probes_df: pd.DataFrame):
     """Validate the contents of a bed file
 
