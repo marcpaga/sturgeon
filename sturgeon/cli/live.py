@@ -12,20 +12,21 @@ import numpy as np
 import pandas as pd
 import pysam
 
-from sturgeon.bam import (
+from sturgeon.callmapping import (
     bam_to_calls, 
     merge_probes_methyl_calls,
     probes_methyl_calls_to_bed,
 )
 from sturgeon.utils import validate_model_file, get_model_path, creation_date
-from sturgeon.prediction import predict_samples
+from sturgeon.prediction import predict_sample, load_model
 from sturgeon.plot import plot_prediction, plot_prediction_over_time
 
 
-def livebam(
+def live(
     input_path: str,
     output_path: str,
     model_files: List[str],
+    source: str,
     probes_file: str,
     margin: int,
     neg_threshold: float,
@@ -37,13 +38,9 @@ def livebam(
     """
 
     logging.info("Sturgeon start up")
-    logging.info("Live bam prediction program")
+    logging.info("Live prediction program")
 
-    logging.info('Starting live prediction from bam files')
     logging.info('Watching the following folder: {}'.format(input_path))
-
-    # keep track of processed bam files
-    bam_files = dict()
 
     probes_df = pd.read_csv(
         probes_file, 
@@ -52,12 +49,47 @@ def livebam(
         sep = ' ',
     )
 
-    probes_df['methylation_calls'] = 0
-    probes_df['unmethylation_calls'] = 0
-    probes_df['total_calls'] = 0
-
     if not os.path.exists(output_path):
         os.makedirs(output_path)
+
+    if source == 'guppy':
+        
+        live_guppy(
+            input_path = input_path,
+            output_path = output_path,
+            model_files = model_files,
+            probes_df = probes_df,
+            margin = margin,
+            neg_threshold = neg_threshold,
+            pos_threshold = pos_threshold,
+            plot_results = plot_results,
+            cooldown = cooldown,
+        )
+
+    elif source == 'megalodon_one':
+
+        live_megalodon_one()
+
+    elif source == 'megalodon_multi':
+
+        live_megalodon_multi()
+
+
+def live_guppy(
+    input_path: str,
+    output_path: str,
+    model_files: List[str],
+    probes_df: pd.DataFrame,
+    margin: int,
+    neg_threshold: float,
+    pos_threshold: float,
+    plot_results: bool,
+    cooldown: int,
+):
+
+    # keep track of processed bam files
+    bam_files = dict()
+    logging.info('Starting live prediction from bam files')
 
     while True:
 
@@ -87,6 +119,7 @@ def livebam(
 
         for file_path, timestamp in zip(available_bam_files, available_bam_timestamps):
             
+            # check if we have processed this bam file already
             file_name = Path(file_path).stem
             try:
                 # already processed bam file, skip
@@ -139,9 +172,10 @@ def livebam(
             )
             if not os.path.isfile(calls_per_probe_file) or not os.path.isfile(calls_per_read_file):
                 
+                probes_methyl_df = deepcopy(probes_df)
                 calls_per_probe, calls_per_read = bam_to_calls(
                     bam_file = file_path,
-                    probes_df = deepcopy(probes_df),
+                    probes_df = probes_methyl_df,
                     margin = margin,
                     neg_threshold = neg_threshold,
                     pos_threshold = pos_threshold,
@@ -207,19 +241,25 @@ def livebam(
                     )
                     continue
 
+                inference_session, array_probes_df, decoding_dict, temperatures, weight_matrix, merge_dict = load_model(model)    
+
                 logging.info("Starting prediction")
-                prediction = predict_samples(
-                    bed_files = [bed_output_file],
-                    model_file = model,
+                prediction_df = predict_sample(
+                    inference_session = inference_session,
+                    bed_file = bed_output_file,
+                    decoding_dict = deepcopy(decoding_dict),
+                    probes_df = array_probes_df,
+                    weight_matrix = weight_matrix,
+                    temperatures = temperatures,
+                    merge_dict = merge_dict,
                 )
-                prediction = list(prediction.values())[0]
-                prediction['timestamp'] = timestamp
+                prediction_df['timestamp'] = timestamp
 
                 output_csv = os.path.join(
                     output_path, 
                     'predictions_{}.csv'.format(Path(model).stem)
                 )
-                prediction.to_csv(
+                prediction_df.to_csv(
                     output_csv,
                     mode = 'a',
                     index = False,
@@ -247,7 +287,7 @@ def livebam(
                             color_dict = None
                     
                     plot_prediction(
-                        prediction_df = prediction,
+                        prediction_df = prediction_df,
                         color_dict = color_dict,
                         output_file = output_pdf
                     )
@@ -280,3 +320,11 @@ def livebam(
         )
         time.sleep(cooldown)
 
+
+def live_megalodon_one():
+
+    pass
+
+def live_megalodon_multi():
+
+    pass

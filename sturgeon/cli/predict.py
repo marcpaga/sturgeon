@@ -4,9 +4,10 @@ import logging
 import zipfile
 import json
 from pathlib import Path
+from copy import deepcopy
 
 from sturgeon.utils import validate_model_file, get_model_path
-from sturgeon.prediction import predict_samples
+from sturgeon.prediction import load_model, predict_sample
 from sturgeon.plot import plot_prediction
 
 def predict(
@@ -57,12 +58,22 @@ def predict(
             continue
 
         logging.info("Starting prediction")
-        predictions = predict_samples(
-            bed_files = bed_files,
-            model_file = model,
-        )
 
-        for bed_name, prediction_df in predictions.items():
+        inference_session, probes_df, decoding_dict, temperatures, weight_matrix, merge_dict = load_model(model)                
+
+        for bed_file in bed_files:
+
+            bed_name = Path(bed_file).stem
+
+            prediction_df = predict_sample(
+                inference_session = inference_session,
+                bed_file = bed_file,
+                decoding_dict = deepcopy(decoding_dict),
+                probes_df = probes_df,
+                weight_matrix = weight_matrix,
+                temperatures = temperatures,
+                merge_dict = merge_dict,
+            )
 
             output_csv = os.path.join(
                 output_path, 
@@ -97,17 +108,5 @@ def predict(
                 )
             else:
                 logging.info('Skipping plotting results')
-
-
-
-
-    
-
-
-
-
-
-    
-
 
     

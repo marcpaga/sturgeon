@@ -135,6 +135,7 @@ def merge_probes_methyl_calls(
             index_col = None,
             sep = '\t',
         )
+        df = df.sort_values(['chr', 'start'])
 
         if file_num == 0:
             output_df = deepcopy(df)
@@ -209,6 +210,10 @@ def bam_to_calls(
 
     chromosomes = np.unique(probes_df['chr'])
 
+    probes_df['methylation_calls'] = 0
+    probes_df['unmethylation_calls'] = 0
+    probes_df['total_calls'] = 0
+
     calls_per_probe = list()
     calls_per_read = list()
     for chrom in chromosomes:
@@ -256,10 +261,6 @@ def bam_path_to_bed(
         index_col = None, 
         sep = ' ',
     )
-
-    probes_df['methylation_calls'] = 0
-    probes_df['unmethylation_calls'] = 0
-    probes_df['total_calls'] = 0
 
     output_files = list()
 
@@ -342,9 +343,6 @@ def mega_file_to_bed(
         index_col = None, 
         sep = ' ',
     )
-    probes_df['methylation_calls'] = 0
-    probes_df['unmethylation_calls'] = 0
-    probes_df['total_calls'] = 0
 
     logging.info(
         '''
@@ -373,6 +371,10 @@ def mega_file_to_bed(
     logging.info('Processing megalodon file: {}'.format(input_file))
 
     chromosomes = np.unique(probes_df['chr'])
+
+    probes_methyl_df['methylation_calls'] = 0
+    probes_methyl_df['unmethylation_calls'] = 0
+    probes_methyl_df['total_calls'] = 0
 
     calls_per_probe = list()
     for chrom in chromosomes:

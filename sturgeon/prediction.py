@@ -1,17 +1,15 @@
-import os
 from pathlib import Path
 import json
 import zipfile
-from typing import Optional, List
+from typing import List
 import logging
+from copy import deepcopy
 
 import numpy as np
 import pandas as pd
 import onnxruntime
 
-from sturgeon.utils import load_bed_file
-from sturgeon.calibration import HistogramCalibration
-from sturgeon.plot import plot_prediction
+from sturgeon.utils import load_bed_file, softmax, merge_predictions
 from sturgeon.constants import METHYL_VALUE, UNMETHYL_VALUE, NOMEASURE_VALUE
 
 def bed_to_numpy(
@@ -64,7 +62,7 @@ def bed_to_numpy(
     
     return x
 
-def predict_sample(
+def model_forward(
     x: np.ndarray, 
     inference_session: onnxruntime.InferenceSession
 ) -> np.ndarray:
@@ -78,26 +76,18 @@ def predict_sample(
         ort_inputs,
     )[0]
 
-    uncalibrated_scores = np.exp(ort_outs[0])
+    uncalibrated_scores = ort_outs[0]
 
     return uncalibrated_scores
 
-
-def predict_samples(
-    model_file: str, 
-    bed_files: List[str], 
-):
+def load_model(model_file):
 
     with zipfile.ZipFile(model_file, 'r') as zipf:
 
-        logging.debug("Loading the decoding dict")
-        decoding_dict = json.load(zipf.open('decoding.json'))
-
         try:
             merge_dict = json.load(zipf.open('merge.json'))
-            requires_merging = True
-        except FileNotFoundError:
-            requires_merging = False
+        except KeyError:
+            merge_dict = None
 
         logging.debug("Loading probes information")
         probes_df = pd.read_csv(
@@ -106,29 +96,23 @@ def predict_samples(
             index_col = None,
         )
 
+        logging.debug("Loading the decoding dict")
+        decoding_dict = json.load(zipf.open('decoding.json'))
+
         logging.debug("Loading calibration matrix")
         try:
-            calibrators = list()
-            calibration_matrix = np.load(zipf.open('calibration.npy'))
-            for i in range(calibration_matrix.shape[-1]):
-                calibrator = HistogramCalibration(
-                    num_classes = len(decoding_dict)
-                )
-                calibrator.load_matrix(calibration_matrix[:, :, i])
-                calibrators.append(calibrator)
-        except FileNotFoundError:
+            temperatures = np.load(zipf.open('calibration.npy'))
+            temperatures = temperatures.flatten()
+        except KeyError:
             logging.debug("No calibration matrix in zip file")
-            calibrators = None
+            temperatures = None
 
         logging.debug("Loading weight scores matrix")
         try:
             weight_matrix = np.load(zipf.open('weight_scores.npz'))
-            mean_probes_per_timepoint = weight_matrix['avgsites']
-            accuracy_per_timepoint_per_model = weight_matrix['performance']
-            calculate_weighted_mean = True
-        except FileNotFoundError:
+        except KeyError:
             logging.debug("No weight scores matrix in zip file")
-            calculate_weighted_mean = False
+            weight_matrix = None
 
         logging.info("Starting inference session")
         so = onnxruntime.SessionOptions()
@@ -141,78 +125,108 @@ def predict_samples(
             sess_options = so,
         )
 
-        all_results = dict()
+    return inference_session, probes_df, decoding_dict, temperatures, weight_matrix, merge_dict
 
-        for bed_file in bed_files:
-            logging.info("Predicting: {}".format(bed_file))
 
-            file_name = Path(bed_file).stem
-            
-            logging.info("Loading bed file: {}".format(bed_file))
-            x = bed_to_numpy(
-                bed_df = load_bed_file(bed_file), 
-                probes_df = probes_df
-            )
-            scores = predict_sample(x, inference_session)
+def predict_sample(
+    inference_session: str, 
+    bed_file: str,
+    decoding_dict: dict,
+    probes_df: pd.DataFrame,
+    weight_matrix: np.ndarray,
+    temperatures: np.ndarray,
+    merge_dict: dict, 
+):
 
-            n = np.sum(x != NOMEASURE_VALUE)
-            if calculate_weighted_mean:
-                # take the weighted average of all models
-                calculated_weights = np.ones(scores.shape, dtype=float)
+    requires_weighted_mean = False
+    requires_merging = False
+    requires_calibration = False
 
-                for m in range(calculated_weights.shape[0]):
+    if weight_matrix is not None:
+        mean_probes_per_timepoint = weight_matrix['avgsites']
+        accuracy_per_timepoint_per_model = weight_matrix['performance']
+        requires_weighted_mean = True
 
-                    weights = accuracy_per_timepoint_per_model[m]
-                    n_probes = mean_probes_per_timepoint[m]
-                    t = n_probes.searchsorted(n)
-                    t = int(t)
-                    if t == weights.shape[0]:
-                        calculated_weights[m, :] = weights[t-1]
-                    elif t == 0:
-                        calculated_weights[m, :] = weights[t]
-                    else:
-                        weights = weights[t-1:t+1]
-                        x = [n_probes[t-1], n_probes[t]]
-                        for i in range(weights.shape[1]):
-                            y = weights[:, i]
-                            calculated_weights[m, i] = np.interp(n, x, y)
+    if merge_dict is not None:
+        requires_merging = True
 
-                final_scores = np.zeros(scores.shape[1])
-                for i in range(scores.shape[1]):
-                    final_scores[i] = np.average(
-                        a = scores[:, i], 
-                        weights = calculated_weights[:, i]
-                    )
+    if temperatures is not None:
+        requires_calibration = True
 
+    logging.info("Loading bed file: {}".format(bed_file))
+    x = bed_to_numpy(
+        bed_df = load_bed_file(bed_file), 
+        probes_df = probes_df
+    )
+    scores = model_forward(x, inference_session)
+
+    calibrated_scores = np.empty_like(scores)
+    for i in range(scores.shape[0]):
+        if requires_calibration:
+            calibrated_scores[i, :]  = np.exp(softmax(scores[i, :])/temperatures[i])
+        else:
+            calibrated_scores[i, :]  = np.exp(softmax(scores[i, :]))
+
+    calibrated_df = dict()
+    for k, v in decoding_dict.items():
+        calibrated_df[v] = calibrated_scores[:, int(k)]
+    calibrated_df = pd.DataFrame(calibrated_df)
+
+    if requires_merging:
+        calibrated_df, decoding_dict = merge_predictions(calibrated_df, decoding_dict, merge_dict)
+        
+    encoding_dict = {v:k for k, v in decoding_dict.items()}
+
+    n = np.sum(x != NOMEASURE_VALUE)
+    calculated_weights = np.ones(
+        (
+            accuracy_per_timepoint_per_model.shape[0],
+            accuracy_per_timepoint_per_model.shape[2],
+        ), 
+    dtype=float)
+
+    if requires_weighted_mean:
+        for m in range(calculated_weights.shape[0]):
+
+            weights = deepcopy(accuracy_per_timepoint_per_model[m])
+            n_probes = mean_probes_per_timepoint[m]
+            t = n_probes.searchsorted(n)
+            t = int(t)
+            if t == weights.shape[0]:
+                calculated_weights[m, :] = weights[t-1]
+            elif t == 0:
+                calculated_weights[m, :] = weights[t]
             else:
-                final_scores = scores.mean(0)
+                weights = weights[t-1:t+1]
+                x = [n_probes[t-1], n_probes[t]]
+                for i in range(weights.shape[1]):
+                    y = weights[:, i]
+                    calculated_weights[m, i] = np.interp(n, x, y)
 
-            prediction_df = {'number_probes': n}
-            for i in range(final_scores.shape[0]):
-                prediction_df[decoding_dict[str(i)]] = final_scores[i]
-            prediction_df = pd.DataFrame(prediction_df, index = [0])
+    
+    avg_scores = {
+        'number_probes': [n],
+    }
+    final_scores = list()
+    for colname in calibrated_df.columns:
+        score = float(np.average(
+            calibrated_df[colname], 
+            weights = calculated_weights[:, encoding_dict[colname]]
+        ))
+        avg_scores[colname] = [
+            score
+        ]
+        final_scores.append(score)
+    final_scores = np.array(final_scores)
+    
+    prediction_df = pd.DataFrame(avg_scores, index = [0])
 
-            if requires_merging:
-                for k, v in merge_dict.items():
-                    prediction_df[k] = 0
-                    for c in v:
-                        prediction_df[k] += prediction_df[c]
-                        prediction_df = prediction_df.drop(c, axis=1)
+    top3 = final_scores.argsort(-1)[::-1][:3]
+    for i, t in enumerate(top3):
+        logging.info('Top {0}: {1:30s} ({2:4.3f})'.format(
+            i+1, calibrated_df.columns[t], final_scores[t]
+        ))
 
-            column_names = np.array(prediction_df.columns)[1:]
-            final_scores = np.array(prediction_df[column_names])[0]
-
-            top3 = final_scores.argsort(-1)[::-1][:3]
-            for i, t in enumerate(top3):
-                logging.info('Top {0}: {1:30s} ({2:4.3f})'.format(
-                    i+1, column_names[t], final_scores[t]
-                ))
-
-            final_column_order = ['number_probes'] + np.sort(column_names).tolist()
-
-            
-            all_results[file_name] = prediction_df[final_column_order]
-
-    return all_results
+    return prediction_df
 
             

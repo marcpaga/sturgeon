@@ -147,6 +147,7 @@ def run_live(args):
         input_path = args.input_path,
         output_path = args.output_path,
         model_files = args.model_files,
+        source = args.source,
         probes_file = args.probes_file,
         margin = args.margin,
         neg_threshold = args.neg_threshold,
