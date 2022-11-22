@@ -182,3 +182,41 @@ def creation_date(path_to_file):
             # We're probably on Linux. No easy way to get creation dates here,
             # so we'll settle for when its content was last modified.
             return stat.st_mtime
+
+def softmax(x):
+    c = x.max()
+    logsumexp = np.log(np.exp(x - c).sum())
+    return x - c - logsumexp
+
+def merge_predictions(prediction_df, decoding_dict, merge_dict):
+
+    old_class_columns = list(decoding_dict.values())
+    non_class_columns = np.array(prediction_df.columns[~np.isin(prediction_df.columns, old_class_columns)])
+   
+    rev_merge_dict = dict()
+    for k, v in merge_dict.items():
+        for c in v:
+            rev_merge_dict[c] = k
+    for v in decoding_dict.values():
+        try:
+            rev_merge_dict[v]
+        except KeyError:
+            rev_merge_dict[v] = v
+    
+    for k, v in merge_dict.items():
+        prediction_df[k] = 0
+        for c in v:
+            prediction_df[k] += prediction_df[c]
+            prediction_df = prediction_df.drop(c, axis=1)
+
+    new_class_columns = np.array(prediction_df.columns[~np.isin(prediction_df.columns, non_class_columns)])
+
+    new_class_columns = np.sort(new_class_columns)
+
+    new_decoding_dict = dict()
+    for i, c in enumerate(new_class_columns):
+        new_decoding_dict[i] = c
+
+    final_column_order = non_class_columns.tolist() + new_class_columns.tolist()
+
+    return prediction_df[final_column_order], new_decoding_dict
