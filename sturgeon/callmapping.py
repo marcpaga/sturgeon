@@ -191,6 +191,7 @@ def probes_methyl_calls_to_bed(
     bed_df = pd.DataFrame(bed_df)
     
     logging.info('Total measured array CpG sites: {}'.format(bed_df.shape[0]))
+    logging.info('Saving bed file to: {}'.format(output_file))
     bed_df.to_csv(
         output_file,
         header = True,
