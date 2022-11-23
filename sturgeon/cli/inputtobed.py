@@ -149,7 +149,6 @@ def megatobed(
 ):
 
     logging.info("Megalodon to bed program")
-    pass
 
     txt_files = list()
     if os.path.isfile(input_path):
