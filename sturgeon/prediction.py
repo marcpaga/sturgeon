@@ -225,7 +225,7 @@ def predict_sample(
     for colname in calibrated_df.columns:
         score = np.array(calibrated_df[colname])[best_m].item()
         avg_scores[colname] = [score]
-        final_scores = np.array(final_scores)
+        final_scores.append(score)
     final_scores = np.array(final_scores)
     
     prediction_df = pd.DataFrame(avg_scores, index = [0])
