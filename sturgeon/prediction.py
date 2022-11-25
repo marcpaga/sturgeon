@@ -207,16 +207,25 @@ def predict_sample(
     avg_scores = {
         'number_probes': [n],
     }
+    # final_scores = list()
+    # for colname in calibrated_df.columns:
+    #     score = float(np.average(
+    #         calibrated_df[colname], 
+    #         weights = calculated_weights[:, encoding_dict[colname]]
+    #     ))
+    #     avg_scores[colname] = [
+    #         score
+    #     ]
+    #     final_scores.append(score)
+    # final_scores = np.array(final_scores)
+
     final_scores = list()
+    arr = np.array(calibrated_df[calibrated_df.columns])
+    best_m = np.where(arr == np.max(arr))[0]
     for colname in calibrated_df.columns:
-        score = float(np.average(
-            calibrated_df[colname], 
-            weights = calculated_weights[:, encoding_dict[colname]]
-        ))
-        avg_scores[colname] = [
-            score
-        ]
-        final_scores.append(score)
+        score = np.array(calibrated_df[colname])[best_m].item()
+        avg_scores[colname] = [score]
+        final_scores = np.array(final_scores)
     final_scores = np.array(final_scores)
     
     prediction_df = pd.DataFrame(avg_scores, index = [0])
