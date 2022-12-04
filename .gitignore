@@ -65,6 +65,10 @@ demo/bam/*.pdf
 demo/bam/out/*
 demo/bam/tmp/*
 demo/bam/out_live/*
+demo/fast5/*
+demo/bed_out
+demo/mega_out
+demo/tmp
 
 main.build
 main.dist
