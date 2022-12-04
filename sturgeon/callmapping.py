@@ -3,10 +3,17 @@ from pathlib import Path
 from copy import deepcopy
 from typing import Optional, List
 import logging
+from contextlib import contextmanager
 
 import pandas as pd
 import numpy as np
 from modbampy import ModBam
+
+@contextmanager
+def SuppressPandasWarning():
+    with pd.option_context("mode.chained_assignment", None):
+        yield
+
 
 def get_methyl_calls_per_read( 
     bam_file: str, 
@@ -89,28 +96,29 @@ def map_methyl_calls_to_probes_chr(
     s = s[f]
     n = n[f]
 
-    for ss, nn, ff in zip(s, n, f):
+    with SuppressPandasWarning():
+        for ss, nn, ff in zip(s, n, f):
 
-        current_scores = scores[ss:nn]
-        bin_scores = np.zeros(current_scores.shape)
+            current_scores = scores[ss:nn]
+            bin_scores = np.zeros(current_scores.shape)
 
-        bin_scores[current_scores > pos_threshold] = 1
-        bin_scores[current_scores < neg_threshold] = -1
+            bin_scores[current_scores > pos_threshold] = 1
+            bin_scores[current_scores < neg_threshold] = -1
 
-        bin_scores = bin_scores[bin_scores != 0]
-        if len(bin_scores) == 0:
-            continue
-        
-        final_score = int(np.median(bin_scores))
-        
-        if final_score == 1:
-            probes_df.loc[ff, 'methylation_calls'] += 1
-        elif final_score == -1:
-            probes_df.loc[ff, 'unmethylation_calls'] += 1
-        else:
-            continue
+            bin_scores = bin_scores[bin_scores != 0]
+            if len(bin_scores) == 0:
+                continue
+            
+            final_score = int(np.median(bin_scores))
+            
+            if final_score == 1:
+                probes_df.loc[ff, 'methylation_calls'] += 1
+            elif final_score == -1:
+                probes_df.loc[ff, 'unmethylation_calls'] += 1
+            else:
+                continue
 
-    probes_df.loc[:, 'total_calls'] = probes_df.loc[:, 'methylation_calls'] + probes_df.loc[:, 'unmethylation_calls']
+            probes_df.loc[:, 'total_calls'] = probes_df.loc[:, 'methylation_calls'] + probes_df.loc[:, 'unmethylation_calls']
 
     return probes_df
 
@@ -234,7 +242,7 @@ def bam_to_calls(
 
         chrom_num = np.unique(calls_per_probe_df['chr']).item()
         calls = calls_per_probe_df['total_calls'].sum()
-        logging.info(
+        logging.debug(
             '''
             Found a total of {} methylation calls on chromosome {}
             '''.format(calls, chrom_num)
@@ -390,7 +398,7 @@ def mega_file_to_bed(
         calls_per_probe.append(calls_per_probe_chr)
 
         calls = calls_per_probe_chr['total_calls'].sum()
-        logging.info(
+        logging.debug(
             '''
             Found a total of {} methylation array sites on chromosome {}
             '''.format(calls, chrom)
