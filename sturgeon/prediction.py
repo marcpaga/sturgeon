@@ -222,6 +222,8 @@ def predict_sample(
     final_scores = list()
     arr = np.array(calibrated_df[calibrated_df.columns])
     best_m = np.where(arr == np.max(arr))[0]
+    if len(best_m) > 0:
+        best_m = best_m[0]
     for colname in calibrated_df.columns:
         score = np.array(calibrated_df[colname])[best_m].item()
         avg_scores[colname] = [score]
