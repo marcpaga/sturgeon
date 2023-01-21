@@ -138,14 +138,8 @@ def predict_sample(
     merge_dict: dict, 
 ):
 
-    requires_weighted_mean = False
     requires_merging = False
     requires_calibration = False
-
-    if weight_matrix is not None:
-        mean_probes_per_timepoint = weight_matrix['avgsites']
-        accuracy_per_timepoint_per_model = weight_matrix['performance']
-        requires_weighted_mean = True
 
     if merge_dict is not None:
         requires_merging = True
@@ -163,7 +157,7 @@ def predict_sample(
     calibrated_scores = np.empty_like(scores)
     for i in range(scores.shape[0]):
         if requires_calibration:
-            calibrated_scores[i, :]  = np.exp(softmax(scores[i, :])/temperatures[i])
+            calibrated_scores[i, :]  = np.exp(softmax(scores[i, :]/temperatures[i]))
         else:
             calibrated_scores[i, :]  = np.exp(softmax(scores[i, :]))
 
@@ -178,46 +172,10 @@ def predict_sample(
     encoding_dict = {v:k for k, v in decoding_dict.items()}
 
     n = np.sum(x != NOMEASURE_VALUE)
-    calculated_weights = np.ones(
-        (
-            accuracy_per_timepoint_per_model.shape[0],
-            accuracy_per_timepoint_per_model.shape[2],
-        ), 
-    dtype=float)
 
-    if requires_weighted_mean:
-        for m in range(calculated_weights.shape[0]):
-
-            weights = deepcopy(accuracy_per_timepoint_per_model[m])
-            n_probes = mean_probes_per_timepoint[m]
-            t = n_probes.searchsorted(n)
-            t = int(t)
-            if t == weights.shape[0]:
-                calculated_weights[m, :] = weights[t-1]
-            elif t == 0:
-                calculated_weights[m, :] = weights[t]
-            else:
-                weights = weights[t-1:t+1]
-                x = [n_probes[t-1], n_probes[t]]
-                for i in range(weights.shape[1]):
-                    y = weights[:, i]
-                    calculated_weights[m, i] = np.interp(n, x, y)
-
-    
     avg_scores = {
         'number_probes': [n],
     }
-    # final_scores = list()
-    # for colname in calibrated_df.columns:
-    #     score = float(np.average(
-    #         calibrated_df[colname], 
-    #         weights = calculated_weights[:, encoding_dict[colname]]
-    #     ))
-    #     avg_scores[colname] = [
-    #         score
-    #     ]
-    #     final_scores.append(score)
-    # final_scores = np.array(final_scores)
 
     final_scores = list()
     arr = np.array(calibrated_df[calibrated_df.columns])
