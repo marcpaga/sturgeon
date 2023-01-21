@@ -62,12 +62,16 @@ demo/bam/*.txt
 demo/bam/*.bed
 demo/bam/*.csv
 demo/bam/*.pdf
-demo/bam/out/*
+demo/bam/out
+demo/bam/out_1
+demo/bam/out_2
+demo/bam/out_3
 demo/bam/tmp/*
-demo/bam/out_live/*
+demo/bam/out_live
 demo/fast5/*
 demo/bed_out
-demo/mega_out
+demo/mega/out
+demo/mega/out_live
 demo/tmp
 
 main.build
