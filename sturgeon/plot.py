@@ -42,7 +42,15 @@ def plot_prediction(
         else:
             color = 'grey'
 
-        plt.bar(x = i, height = v, edgecolor = 'black', color = color)
+        plt.axhline(0.8, color = 'grey', linestyle = '--', zorder = 1)
+        plt.axhline(0.95, color = 'grey', linestyle = '--', zorder = 1)
+        plt.bar(
+            x = i, 
+            height = v, 
+            edgecolor = 'black', 
+            color = color, 
+            zorder = 2
+        )
         
     plt.xlim(-1, len(label_columns))
     plt.ylim(0, 1.05)
@@ -50,7 +58,7 @@ def plot_prediction(
     plt.ylabel('Score')
     plt.title(title)
     plt.tight_layout()
-    plt.savefig(output_file, bbox_inches="tight")
+    plt.savefig(output_file, bbox_inches="tight", dpi = 300)
     plt.close()
 
 
@@ -96,9 +104,18 @@ def plot_prediction_over_time(
         else:
             color = None
 
-        plt.plot(x, y, color = 'black', zorder = 1)
-        plt.scatter(x = x, y = y, c = 'black', s = 120, zorder = 2)
-        plt.scatter(x = x, y = y, c = color, s = 60, zorder = 3, label = c)
+        plt.axhline(0.8, color = 'grey', linestyle = '--', zorder = 1)
+        plt.axhline(0.95, color = 'grey', linestyle = '--', zorder = 1)
+        plt.plot(x, y, color = 'black', zorder = 2)
+        plt.scatter(
+            x = x, 
+            y = y, 
+            c = color, 
+            s = 60, 
+            zorder = 3, 
+            label = c, 
+            edgecolor='black'
+        )
         
         
     plt.ylim(0, 1.05)
