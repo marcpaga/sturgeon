@@ -155,6 +155,7 @@ Example usage with demo data (megalodon txt files):
 sturgeon live \
 -i demo/bam \
 -o demo/bam/out_live \
+-s megalodon \
 --model-files PATH_TO_MODEL_DIR/general.zip \
 --plot-results
 ```
