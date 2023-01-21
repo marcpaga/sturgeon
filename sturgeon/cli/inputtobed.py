@@ -162,6 +162,7 @@ def megatobed(
         err_msg = '''
         --input-path must be a directory or file, given: {}
         '''.format(input_path)
+        logging.error(err_msg)
         raise ValueError(err_msg)
 
     mega_files = list()
@@ -170,7 +171,7 @@ def megatobed(
         if success:
             mega_files.append(m)
         else:
-            logging.info(
+            logging.error(
                 '''
                 File {}, did not pass validation either not a megalodon file or
                 an invalid megalodon file. Reason: {}.
