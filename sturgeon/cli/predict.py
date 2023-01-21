@@ -32,13 +32,21 @@ def predict(
         err_msg = '''
         --input-path must be a directory or file, given: {}
         '''.format(input_path)
+        logging.error(err_msg)
         raise ValueError(err_msg)
 
     if not os.path.isdir(output_path):
-        err_msg = '''
-        --output-path must be a directory that exists, given: {}
-        '''.format(output_path)
-        raise ValueError(err_msg)
+        os.makedirs(output_path)
+        logging.info('''
+        Output path does not exist, creating: {}
+        '''.format(output_path))
+    else:
+        if len(os.listdir(output_path)):    
+            err_msg = '''
+            --output-path {} contains files. Delete them or provide another path
+            '''.format(output_path)
+            logging.error(err_msg)
+            raise ValueError(err_msg)
 
     logging.info("Found a total of {} bed files".format(len(bed_files)))
     logging.info("Found a total of {} model files".format(len(model_files)))
