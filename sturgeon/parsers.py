@@ -93,37 +93,43 @@ def register_live(parser):
         '-s', '--source',
         type=str,
         required = True,
-        choices = ['guppy', 'megalodon_one', 'megalodon_multi'],
+        choices = ['guppy', 'megalodon'],
         help = '''
         Which software was used to output the input files.
         'guppy' for alignment files (.bam). 
-        'megalodon_one' for a single file with per read calls
-        'megalodon_multi' for multuple files with per read calls
+        'megalodon' for per read methylation calls (.txt)
         '''
     )
     subparser.add_argument(
         '--probes-file',
         type = str,
-        default = os.path.join(os.path.dirname(__file__), 'include/static', 'probes.bed'),
+        default = os.path.join(
+            os.path.dirname(__file__), 'include/static', 'probes.bed'
+        ),
         help = 'Bed file with probe names and genomic locations'
     )
     subparser.add_argument(
         '--margin',
         type = int,
         default = 25,
-        help='Neighbor methylation calls to consider when evaluating a probe location'
+        help='''
+        Neighbor methylation calls to consider when evaluating a probe location
+        '''
     )
     subparser.add_argument(
         '--neg-threshold',
         type = float,
         default = 0.3,
-        help='Positions with scores below this threshold will be considered non-methylated'
+        help='''Positions with scores below this threshold will be considered 
+        non-methylated'''
     )
     subparser.add_argument(
         '--pos-threshold',
         type = float,
         default = 0.7,
-        help='Positions with scores above this threshold will be considered methylated'
+        help='''
+        Positions with scores above this threshold will be considered methylated
+        '''
     )
     subparser.add_argument(
         '-p', '--plot-results',
@@ -160,8 +166,12 @@ def register_inputtobed(parser):
 
     subparser = parser.add_parser(
         'inputtobed',
-        description = 'Convert an input file, output of guppy or megalodon to bed format',
-        help = 'Convert an input file, output of guppy or megalodon to bed format',
+        description = '''
+        Convert an input file, output of guppy or megalodon to bed format
+        ''',
+        help = '''
+        Convert an input file, output of guppy or megalodon to bed format
+        ''',
         formatter_class = argparse.ArgumentDefaultsHelpFormatter,
     )
 
@@ -169,7 +179,10 @@ def register_inputtobed(parser):
         '-i', '--input-path',
         type = str,
         required = True,
-        help='Path to file (bam) or directory where the bam files are'
+        help='''
+        Path to input file or directory where the input files are. Input files
+        are either bam or txt files.
+        '''
     )
     subparser.add_argument(
         '-o', '--output-path',
@@ -188,26 +201,34 @@ def register_inputtobed(parser):
     subparser.add_argument(
         '--probes-file',
         type = str,
-        default = os.path.join(os.path.dirname(__file__), 'include/static', 'probes.bed'),
+        default = os.path.join(
+            os.path.dirname(__file__), 'include/static', 'probes.bed'
+        ),
         help = 'Bed file with probe names and genomic locations'
     )
     subparser.add_argument(
         '--margin',
         type = int,
         default = 25,
-        help='Neighbor methylation calls to consider when evaluating a probe location'
+        help='''
+        Neighbor methylation calls to consider when evaluating a probe location
+        '''
     )
     subparser.add_argument(
         '--neg-threshold',
         type = float,
         default = 0.3,
-        help='Positions with scores below this threshold will be considered non-methylated'
+        help='''
+        Positions with scores below this threshold will be considered 
+        non-methylated'''
     )
     subparser.add_argument(
         '--pos-threshold',
         type = float,
         default = 0.7,
-        help='Positions with scores above this threshold will be considered methylated'
+        help='''
+        Positions with scores above this threshold will be considered methylated
+        '''
     )
 
     subparser.set_defaults(func=run_inputtobed)

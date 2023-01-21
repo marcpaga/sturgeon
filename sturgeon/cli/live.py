@@ -72,14 +72,9 @@ def live(
             cooldown = cooldown,
         )
 
-    elif source == 'megalodon_one':
+    elif source == 'megalodon':
 
-        raise NotImplementedError()
-        live_megalodon_one()
-
-    elif source == 'megalodon_multi':
-
-        live_megalodon_multi(
+        live_megalodon(
             input_path = input_path,
             output_path = output_path,
             model_files = model_files,
@@ -337,7 +332,7 @@ def live_guppy(
         )
         time.sleep(cooldown)
 
-def live_megalodon_multi(
+def live_megalodon(
     input_path: str,
     output_path: str,
     model_files: List[str],
