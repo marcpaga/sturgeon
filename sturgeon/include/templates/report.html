@@ -1,0 +1,38 @@
+<html>
+<head>
+    <style>
+        * {
+            font-family: sans-serif;
+        }
+        body {
+            padding: 20px;
+        }
+        table {
+            border-collapse: collapse;
+            text-align: right;
+        }
+        table tr {
+            border-bottom: 1px solid
+        }
+        table th, table td {
+            padding: 10px 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Sturgeon CNS classification report</h1>
+
+<h2>Information summary</h2>
+
+<h3>- Classifier: {{ model_name }}</h3>
+<h3>- Total number of measured CpG sites: {{ total_cpg_sites }}</h3>
+
+<h2>Top 3 predictions </h2>
+<h3>- Top1: {{ top1_class }}</h3>
+<h3>- Top2: {{ top2_class }}</h3>
+<h3>- Top3: {{ top3_class }}</h3>
+
+</body>
+</html>
