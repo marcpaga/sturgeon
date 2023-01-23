@@ -14,7 +14,7 @@ pip3 install . --no-cache-dir
 
 If you use a pre-compiled binary then there's no necessity for installation.
 
-## Avaialble models
+## Available models
 
 Model files are zip files with the an `onnx` model file and several other files with information about the classes and model calibration. 
 
