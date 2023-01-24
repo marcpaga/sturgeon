@@ -45,8 +45,8 @@ def predict(
             err_msg = '''
             --output-path {} contains files. Delete them or provide another path
             '''.format(output_path)
-            logging.error(err_msg)
-            raise ValueError(err_msg)
+            logging.warning(err_msg)
+            #raise ValueError(err_msg)
 
     logging.info("Found a total of {} bed files".format(len(bed_files)))
     logging.info("Found a total of {} model files".format(len(model_files)))
