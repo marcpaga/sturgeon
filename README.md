@@ -6,8 +6,22 @@ For more information on the classifier please refere to our [manuscript](https:/
 
 ## Installation
 
-From source:
 ```
+git clone https://github.com/marcpaga/sturgeon
+```
+
+Optional: to include the models directly to the installation path. Otherwise, during prediction, you can just pass the path to the zip file
+Download the desired models, see below for available models and links.
+
+And the move the models:
+```
+cd sturgeon
+mv DOWNLOADED_MODEL.zip sturgeon/include/models/DOWNLOADED_MODEL.zip
+```
+
+```
+cd sturgeon # if you haven't
+
 python3 -m venv venv
 source venv/bin/activate
 python3 -m pip install --upgrade pip
@@ -32,6 +46,8 @@ The following models are available:
     - `0.8 <= score < 0.95`: confident result that the class is correct. If used during live sequencing, we recommend to wait for additional sequencing data so that the score gets higher, or the score is stable within this range (e.g several predictions like 0.82, 0.87, 0.84, ...).
     - `score >= 0.95`: high confident result that the class is correct.
 
+Download link: https://www.dropbox.com/s/yzca4exl40x9ukw/general.zip?dl=0
+
 ### `Brainstem`
 
 - This model constains a reduced number of classes (30) that can only occur in the brainstem region. Included in these classes are also the control classes and a `Other - Non brainstem` class.
@@ -41,6 +57,7 @@ The following models are available:
     - `score < 0.95`: inconclusive result. We recommend to wait for additional data; if not possible, consider the top3 highest scoring classes or their class families as whole.
     - `score >= 0.95`: high confident result that the class is correct, but should be treated as inconclusive is the predicted class is `Other - Non brainstem`.
 
+Download link: https://www.dropbox.com/s/55hypw7i8tidr0a/brainstem.zip?dl=0
 
 ## Quickstart
 
