@@ -30,18 +30,6 @@ dependencies = [
 [project.scripts]
 sturgeon = "sturgeon.main:run"
 
-[project.optional-dependencies]
-build_linux = [
-    'nuitka==1.2.0',
-    'patchelf==0.16.1'
-]
-build_macos = [
-    'nuitka==1.2.0',
-]
-build_windows = [
-    'nuitka==1.2.0',
-]
-
 [options.package_data]
 sturgeon = "include/*"
 

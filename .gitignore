@@ -73,6 +73,7 @@ demo/bed_out
 demo/mega/out
 demo/mega/out_live
 demo/tmp
+demo/bed/out
 
 main.build
 main.dist
