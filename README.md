@@ -6,18 +6,24 @@ For more information on the classifier please refere to our [manuscript](https:/
 
 ## Installation
 
+Get the repository.
+
 ```
 git clone https://github.com/marcpaga/sturgeon
 ```
 
-Optional: to include the models directly to the installation path. Otherwise, during prediction, you can just pass the path to the zip file
-Download the desired models, see below for available models and links.
+### Optional 
+To include the models directly to the installation path, download the desired models, see below for available models and links.
 
 And the move the models:
 ```
 cd sturgeon
 mv DOWNLOADED_MODEL.zip sturgeon/include/models/DOWNLOADED_MODEL.zip
 ```
+
+Otherwise, during prediction, you can just pass the path to the zip file.
+
+Install Sturgeon.
 
 ```
 cd sturgeon # if you haven't
