@@ -30,7 +30,7 @@ class LogFormatter(logging.Formatter):
 
 # Setup logging
 def setup_logging(
-    logfile_file: str, 
+    logfile_file: Optional[str] = None, 
     logfile_log_level: Optional[str] = 'debug', 
     console_log_output: Optional[str] = 'stdout',
     console_log_level: Optional[str] = 'info', 
@@ -70,27 +70,28 @@ def setup_logging(
 	logger.addHandler(console_handler)
 
 	# Create log file handler
-	try:
-		logfile_handler = logging.FileHandler(logfile_file)
-	except Exception as exception:
-		print("Failed to set up log file: {}".format(exception))
-		return False
+	if logfile_file:
+		try:
+			logfile_handler = logging.FileHandler(logfile_file)
+		except Exception as exception:
+			print("Failed to set up log file: {}".format(exception))
+			return False
 
-	# Set log file log level
-	try:
-        # only accepts uppercase level names
-		logfile_handler.setLevel(logfile_log_level.upper()) 
-	except:
-		print("Failed to set log file log level: invalid level: {}".format(logfile_log_level))
-		return False
+		# Set log file log level
+		try:
+			# only accepts uppercase level names
+			logfile_handler.setLevel(logfile_log_level.upper()) 
+		except:
+			print("Failed to set log file log level: invalid level: {}".format(logfile_log_level))
+			return False
 
-	# Create and set formatter, add log file handler to logger
-	logfile_formatter = LogFormatter(
-        fmt = log_line_template, 
-        color = False,
-    )
-	logfile_handler.setFormatter(logfile_formatter)
-	logger.addHandler(logfile_handler)
+		# Create and set formatter, add log file handler to logger
+		logfile_formatter = LogFormatter(
+			fmt = log_line_template, 
+			color = False,
+		)
+		logfile_handler.setFormatter(logfile_formatter)
+		logger.addHandler(logfile_handler)
 
 	# Success
 	return True

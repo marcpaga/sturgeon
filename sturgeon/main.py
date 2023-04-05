@@ -32,6 +32,11 @@ def run():
         version="Sturgeon version: {}".format(__version__),
         help="Show Sturgeon version and exit.",
     )
+    parser.add_argument(
+        "--no-logfile",
+        action='store_true',
+        help="Will not write the log to a file",
+    )
     parser.set_defaults(func=lambda _: parser.print_help())
 
     from sturgeon.parsers import (
@@ -51,10 +56,14 @@ def run():
     
     cmd_func = args.func
 
-    log_dir = os.path.join(os.getcwd(),'logs')
-    log_file = os.path.join(log_dir, time.strftime("%Y%m%d-%H%M%S") + '.log')
-    if not os.path.exists(log_dir):
-        os.mkdir(log_dir)
+    # skip making a logfile
+    if args.no_logfile:
+        log_file = None
+    else:
+        log_dir = os.path.join(os.getcwd(),'logs')
+        log_file = os.path.join(log_dir, time.strftime("%Y%m%d-%H%M%S") + '.log')
+        if not os.path.exists(log_dir):
+            os.mkdir(log_dir)
 
     log_setup_success = setup_logging(
 	    logfile_file = log_file,
