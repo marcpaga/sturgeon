@@ -77,21 +77,21 @@ def setup_logging(
 			print("Failed to set up log file: {}".format(exception))
 			return False
 
-	# Set log file log level
-	try:
-        # only accepts uppercase level names
-		logfile_handler.setLevel(logfile_log_level.upper()) 
-	except:
-		print("Failed to set log file log level: invalid level: {}".format(logfile_log_level))
-		return False
+		# Set log file log level
+		try:
+			# only accepts uppercase level names
+			logfile_handler.setLevel(logfile_log_level.upper()) 
+		except:
+			print("Failed to set log file log level: invalid level: {}".format(logfile_log_level))
+			return False
 
-	# Create and set formatter, add log file handler to logger
-	logfile_formatter = LogFormatter(
-        fmt = log_line_template, 
-        color = False,
-    )
-	logfile_handler.setFormatter(logfile_formatter)
-	logger.addHandler(logfile_handler)
+		# Create and set formatter, add log file handler to logger
+		logfile_formatter = LogFormatter(
+			fmt = log_line_template, 
+			color = False,
+		)
+		logfile_handler.setFormatter(logfile_formatter)
+		logger.addHandler(logfile_handler)
 
 	# Success
 	return True
