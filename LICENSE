@@ -1,0 +1,67 @@
+EVALUATION SOFTWARE LICENSE AGREEMENT
+IMPORTANT! 
+1) License to use the STURGEON Software. The software to allow bioinformatic sparse methylation analysis “STURGEON” (the “Software”) you seek to use is licensed only on the condition that you ("YOU") agree with Stichting Oncode Institute, with its office at Jaarbeursplein 6, 3521 AL Utrecht, NL (“Oncode”) to the terms and conditions set forth below. PLEASE CAREFULLY READ THE TERMS OF THIS SOFTWARE LICENSE AGREEMENT (the “Agreement”). If you do not agree to the terms of this Agreement, delete and do not use the Software.
+
+2) Permission for Use.
+•	ONCODE grants to YOU a non-exclusive, non-transferable, non-sublicensable right to use the Software on the terms and conditions set out in this Agreement.
+•	The Software and any and all documentation, knowledge, know how and/or techniques relating to the Software, is and will remain the sole and absolute property of UMCU. Oncode specifically retains the right to grant licenses of the Software to third parties. 
+
+3) Restrictions of Use.  Subject to Article 4, YOU SHALL NOT and will NOT authorize any third party to: 
+•	distribute, sell, re-sell, lease, transfer, loan, assign, trade, rent, publish or otherwise transfer the Software, or any part thereof and/or copies thereof, to others for consideration, financial or otherwise;
+•	improve, further develop, adapt, decompile, disassemble, translate into another computer language, create derivative works, use any part of the Software to mimic data or functionality in the Software, or otherwise reverse engineer the Software without the written permission of Oncode;
+•	alter or delete any of the copyright notices present on, or in the Software;
+•	license or sublicense the use of the Software to others without the written permission of Oncode;
+•	use, without its express permission, the name of Oncode and/or UMCU, or any trademark or logo of Oncode and/or UMCU in advertising, publicity, or otherwise;
+•	export or re-export the Software or any copy or adaptation, whether in violation of any applicable laws or regulations or otherwise; and
+•	Publish results obtained through YOUR use of the Software. 
+
+4) The Software was developed by Dr. Jeroen de Ridder, Marc Pagès-Gallego and Carlo Vermeulen of the UMCU (“Partner Institute name”). The Software has the following dependencies, which are subject to their own open source licenses. Please review and agree to the appropriate open source license prior to using the Software:
+
+Code	Link	OS License
+NumPY
+	https://numpy.org/
+NumPy is licensed under the BSD License.
+Pandas
+	https://github.com/pandas-dev/pandas/blob/main/LICENSE 
+Pandas is licensed under the BSD License.
+Matplotlib
+	https://github.com/matplotlib/matplotlib/blob/main/LICENSE/LICENSE 
+Matplotlib is licensed under the BSD License.
+PyTorch
+	https://github.com/pytorch/pytorch/blob/master/LICENSE 
+PyTorch is licensed under the BSD License.
+Onnx
+	https://github.com/onnx/onnx/blob/main/LICENSE 
+Onnx is licensed under the Apache 2.0 License.
+Pysam
+  https://github.com/pysam-developers/pysam/blob/master/COPYING
+Pysam is licensed under the MIT License.
+Modbampy
+  https://github.com/epi2me-labs/modbam2bed/blob/master/LICENSE
+Modbampy is under the Oxford Nanopore Technologies PLC. Public License Version 1.0
+Python	https://www.python.org/download/releases/3.4.0/license/ 
+Python is licensed under the Python software foundation license.
+
+Oncode is the exclusive valorization partner for intellectual property and know how developed by the lab of Dr. Jeroen de Ridder and which is owned by UMCU. If YOU are interested in using the Software for any commercial purposes, please contact Oncode Business Development at valorization@oncode.nl, referencing Oncode file no. 2022-019. 
+
+5) Representation of Authority.  YOU explicitly represent and warrant to Oncode that YOU possess the legal authority to enter into this Agreement, and that YOU will be financially responsible for your use of the Software. You agree to be responsible for all license fees, costs, charges and taxes arising out of your use of the Software. YOU also acknowledge that YOU are solely responsible for supplying any hardware necessary to use the Software pursuant to this Agreement.
+
+6) No Warranty.  YOU further acknowledge and agree that the Software is experimental in nature and is provided to YOU on an “as is” basis and for academic research purposes only. Oncode and/or UMCU have no obligation to provide any services, modifications, upgrades, updates, or replacements relating to the Software. YOU acknowledge and agree that Oncode and/or UMCU make no representations and extend no warranties of any kind, either express or implied. There are no express or implied warranties of merchantability or fitness of the Software for a particular purpose, or that the use of the Software will not infringe any patent, copyright, trademark or other rights, or any other express or implied representations or warranties. In particular, nothing in this Agreement is or will be construed as a warranty or representation by Oncode and/or UMCU as to the validity or scope of copyright or other intellectual property rights in the Software; an obligation to furnish any other software, technology, or technological information; an obligation on Oncode and/or UMCU to correct malfunctions that arise in the version of the Software that YOU receive. ONCODE AND UMCU DO NOT WARRANT THAT THE SOFTWARE IS FREE FROM MALFUNCTIONS, NOR THAT ANY MALFUNCTIONS CAN OR WILL BE CORRECTED OR THAT ONCODE AND/OR UMCU WILL DEVELOP OR PROVIDE TO YOU ANY OPERATIONS, CAPABILITIES OR FEATURES NOT PRESENT IN THE VERSION OF THE SOFTWARE THAT YOU RECEIVE.  THE PARTIES ACKNOWLEDGE THAT THIS IS A THIRD PARTY CLAUSE (IN DUTCH ‘DERDENBEDING’) WHICH CAN BE INVOKED BY UMCU DIRECTLY AGAINST YOU.
+
+7) LIMITATION OF LIABILITY. YOU AGREE THAT IN NO EVENT SHALL ONCODE AND/OR UMCU BE LIABLE TO YOU OR ANY THIRD PARTY FOR ANY INDIRECT, CONSEQUENTIAL, INCIDENTAL, PUNITIVE OR SPECIAL DAMAGES WHATSOEVER, WITHOUT REGARD TO CAUSE OR THEORY OF LIABILITY, OR ANY DAMAGES (WHETHER DIRECT OR INDIRECT) INCURRED FOR LOSS OF BUSINESS, PROFITS OR REVENUE, LOSS OF PRIVACY, LOSS OF USE OF ANY DEVICE OR SOFTWARE (INCLUDING BUT NOT LIMITED TO, THE SOFTWARE), COSTS OF PROCURING SUBSTITUTE OR REPLACEMENT GOODS AND SERVICES, BUSINESS INTERRUPTION, LOSS OF BUSINESS INFORMATION OR OTHER PECUNIARY LOSS ARISING OUT OF THIS AGREEMENT OR THE SOFTWARE PROVIDED HEREUNDER, EVEN IF ONCODE AND/OR UMCU HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. NO MEMBER OF ONCODE, UMCU, THEIR BOARD OF GOVERNORS, OFFICERS, EMPLOYEES, FACULTY, STUDENTS, STAFF OR AGENTS WILL BE LIABLE FOR ANY UNAUTHORIZED ACCESS TO, OR ANY CORRUPTION, ERASURE, THEFT, DESTRUCTION, ALTERATION, INADVERTENT DISCLOSURE OR LOSS OF DATA, INFORMATION OR CONTENT TRANSMITTED, RECEIVED OR STORED BY OR IN CONNECTION WITH THE SOFTWARE REGARDLESS OF THE CAUSE. ONCODE AND/OR UMCU’S TOTAL LIABILITY, WHETHER UNDER THE EXPRESS OR IMPLIED TERMS OF THIS AGREEMENT, IN TORT (INCLUDING NEGLIGENCE), OR AT COMMON LAW, FOR ANY LOSS OR DAMAGE SUFFERED BY YOU, WHETHER DIRECT, INDIRECT OR SPECIAL, OR ANY OTHER SIMILAR OR LIKE DAMAGE THAT MAY ARISE OR DOES ARISE FROM ANY BREACHES OF THIS AGREEMENT BY ONCODE, UMCU, THEIR BOARD OF GOVERNORS, OFFICERS, EMPLOYEES, FACULTY, STUDENTS, STAFF OR AGENTS, IS STRICTLY LIMITED TO FIVE EURO (€5.00). THE PARTIES ACKNOWLEDGE THAT THIS IS A THIRD PARTY CLAUSE (IN DUTCH ‘DERDENBEDING’) WHICH CAN BE INVOKED BY UMCU DIRECTLY AGAINST YOU.
+
+8) INDEMNIFICATION. YOU AGREE TO INDEMNIFY, DEFEND AND HOLD HARMLESS ONCODE, UMCU, THEIR BOARD OF GOVERNORS, OFFICERS, EMPLOYEES, FACULTY, STUDENTS, STAFF AND AGENTS FROM AND AGAINST ANY AND ALL LIABILITY, LOSS, DAMAGE, ACTION, CLAIM OR EXPENSE (INCLUDING ATTORNEY'S FEES AND COSTS AT TRIAL AND APPELLATE LEVELS) IN CONNECTION WITH ANY CLAIM, SUIT, ACTION, DEMAND OR JUDGMENT ARISING OUT OF, CONNECTED WITH, RESULTING FROM, OR SUSTAINED AS A RESULT OF YOUR USE OF THE SOFTWARE OR IN EXECUTING AND PERFORMING THIS AGREEMENT. THE PARTIES ACKNOWLEDGE THAT THIS IS A THIRD PARTY CLAUSE (IN DUTCH ‘DERDENBEDING’) WHICH CAN BE INVOKED BY UMCU DIRECTLY AGAINST YOU.
+
+9) Term. YOU agree this Agreement is effective for an unlimited period, unless terminated earlier. 
+
+10) Termination. YOU may terminate this Agreement at any time by ceasing all use of the Software and destroying or deleting the Software (including the related documentation), together with all copies in any form. Oncode may terminate this Agreement immediately, and this Agreement shall be deemed to have automatically terminated, if YOU breach or fail to comply with any term or condition of this Agreement, or upon thirty (30) days’ notice. Upon any termination, including termination by YOU, YOU must destroy or return to Oncode the Software (including the related documentation or materials), together with all copies in any form, and YOU will have no further right to use the Software. Article 3 (Restrictions of Use), Article 6 (No Warranty), Article 7 (Limitation of Liability) and Article 8 (Indemnification) of this Agreement will however survive any termination of this Agreement.
+
+11) Governing Law. YOU agree this Agreement shall be governed by, interpreted and construed in accordance with, the laws of the Netherlands, without regard to any conflict of laws principles that would result in the application of laws of any other jurisdiction. YOU agree that by accepting the terms of this Agreement and using the Software YOU have attorned to the exclusive jurisdiction of the competent courts of The Netherlands. The Parties agree that the competent courts of The Netherlands have exclusive jurisdiction over this Agreement. 
+
+12) Miscellaneous. No modification of this Agreement will be binding on the parties, unless in writing and signed by an authorized representative of each party. 
+
+Should any provision of this Agreement be declared invalid or unenforceable, then such provision shall be deemed severable from this Agreement and shall not affect the validity or enforceability of the remaining provisions hereof. All rights in the Software not specifically granted in this Agreement are reserved by UMCU. 
+
+YOU may not assign or transfer this Agreement (by merger, operation of law or in any other manner) without the prior written consent of Oncode and any attempt to do so without such consent shall be void, with no legal force and effect, and shall constitute a material breach of this Agreement by YOU.
+
+YOU acknowledge that YOU have read this Agreement, understand it, and that by using the Software YOU agree to be bound by its terms and conditions. YOU further agree that it is the complete and exclusive statement of the agreement between Oncode and YOU, and supersedes any proposal or prior agreement, oral or written, and any other communication between Oncode and YOU relating to the subject matter of this Agreement. 
