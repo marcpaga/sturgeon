@@ -152,7 +152,7 @@ add_and_plot=function(merged_data, result_file){
     
     mgd = merge(merged_data, reslist_2, by="class") 
     colnames(mgd)[ncol(mgd)]=paste0("iteration_", ncol(mgd)-1)
-    plot('', xlim=c(0,ifelse(ncol(mgd)>5, ncol(mgd)+5, 10)), ylim=c(0,1), main="performance over time", xlab="iteration", ylab="confidence") 
+    plot('', xlim=c(0,ifelse(ncol(mgd)>5, ncol(mgd)+5, 10)), ylim=c(0,1), main="confidence over time", xlab="iteration", ylab="confidence") 
     for(i in 1:nrow(mgd)){
       clr = unlist(unname(color_translation[mgd[i,"class"]]))
       lines(x = 0:(ncol(mgd)-2), y= as.numeric(mgd[i,2:ncol(mgd)]), col=clr)
@@ -361,6 +361,7 @@ plot_cnv_from_bam_depmix=function(bam){
   mn = mean(sample$reltoref)
   totreads=sum(sample$coverage)
   sample$logtr = log(sample$reltoref/mn, 2)
+  maxy= ifelse(max(sample$logtr)>3, max(sample$logtr),3)
   
   trprobs = rep(0.01, times=25)
   trprobs[1] = 0.96
@@ -395,7 +396,7 @@ plot_cnv_from_bam_depmix=function(bam){
   
   points(x=as.numeric(row.names(sample)),y=sample$logtr, type="p", pch=16, col=sample$color)
   #lines(x = as.numeric(row.names(sample)), y=esttrans$corrmn, col="red" )
-  maxy= ifelse(max(sample$logtr)>3, max(sample$logtr),3)
+  
   
   segments(x0 = as.numeric(row.names(sample))-0.5, x1=as.numeric(row.names(sample))+0.5, y0=esttrans$corrmn,y1=esttrans$corrmn, col="red", lwd=2 )
   
@@ -430,78 +431,91 @@ plot_cnv_from_live_dir_depmix=function(directory){
 
 library(DNAcopy)
 
-plot_cnv_from_bam_DNAcopy = function(bam){
+plot_cnv_from_bam_DNAcopy = function(bam, makeplot=T, lines_only=F){
   readCounts <- binReadCounts(bins, bamfiles=bam, isNotPassingQualityControls=NA)
-  
   exportBins(readCounts, file="~/nanocns/bins_sample_counts_tmp.bed", format="bed", filter=F, logTransform=F)
-  
   reference=read.table("~/nanocns/bins_export.bed", skip = 1)
   colnames(reference) = c("chrom", "start", "end", "name", "coverage", "orientation")
   sample = read.table("~/nanocns/bins_sample_counts_tmp.bed", skip = 1)
   system("rm ~/nanocns/bins_sample_counts_tmp.bed")
   colnames(sample) = c("chrom", "start", "end", "name", "coverage", "orientation")
-  
+  totreads_title = sum(sample$coverage)
+  sample$coverage = as.numeric(sample$coverage)+0.001
   totreads = sum(sample$coverage)
   sample$refcov = reference$coverage
   sample = sample[sample$chrom!="Y"&sample$chrom!="X",]
   sample$reltoref = sample$coverage/sample$refcov
-  sample=na.omit(sample)
+  ##sample=na.omit(sample)
   blacklistbins = sample[sample$refcov<500,]
   blacklistbins = row.names(blacklistbins)
   sample = sample[!row.names(sample)%in%blacklistbins,]
-  sample=sample[sample$coverage>0,]
+  #sample=sample[sample$coverage>0,]
   mn = mean(sample$reltoref)
   totreads=sum(sample$coverage)
   sample$logtr = log(sample$reltoref/mn, 2)
-  
-  
+  sample$logtr=ifelse(sample$logtr>3,3, ifelse(sample$logtr<(-3),-3, sample$logtr))
   sample$chromname=ifelse(nchar(sample$chrom)==1, paste0("chr0", sample$chrom), paste0("chr", sample$chrom))
-  
   bam_cna = CNA(sample$logtr, chrom=sample$chromname, maploc=sample$start+1e6, data.type="logratio", sampleid = "cnvplot")
   smoothed.CNA.object <- smooth.CNA(bam_cna)
   segment.smoothed.CNA.object <- segment(smoothed.CNA.object, verbose=1)
-  plot(segment.smoothed.CNA.object, plot.type="w")
-  
-  fr = data.frame(chrom=smoothed.CNA.object$chrom, loc=smoothed.CNA.object$maploc, val=smoothed.CNA.object$cnvplot)
-  
-  nr = 1
-  for(i in 1:(nrow(fr)-1)){
-    if(fr$chrom[i]!=fr$chrom[i+1]){
-      abline(v=as.numeric(row.names(fr)[i])+0.5)
-      chrname= gsub(pattern = "chr", replacement = "", x = fr[i,"chrom"])
-      ypos = ifelse(nr %% 2 == 1, 2, 1.8)
-      nr=nr+1
-      text(x = i, adj=c(1,0), labels = chrname, y = ypos)
+  #plot(segment.smoothed.CNA.object, plot.type="w")
+  pointcolorframe = data.frame(pointx=1:length(bam_cna$cnvplot), pointy=bam_cna$cnvplot, pointcolor="black")
+  for(x in 1:nrow(segment.smoothed.CNA.object$segRows)){
+    if(segment.smoothed.CNA.object$output[x, "seg.mean"]>0.5){
+      pointcolorframe[segment.smoothed.CNA.object$segRows[x,1]:segment.smoothed.CNA.object$segRows[x,2],"pointcolor"]="green"
     }
+    if(segment.smoothed.CNA.object$output[x, "seg.mean"]<(-0.5)){
+      pointcolorframe[segment.smoothed.CNA.object$segRows[x,1]:segment.smoothed.CNA.object$segRows[x,2],"pointcolor"]="blue"
+    }    }
+  if(makeplot){
+    plot("", xlim=c(0,length(bam_cna$cnvplot)), ylim=c(-3,3), main=paste0("CNVs nreads=",totreads_title), xaxt="n", xlab="genomic pos",
+         ylab="log ratio")
+    if(lines_only==F){
+      points(x=pointcolorframe$pointx, y=pointcolorframe$pointy, pch=16, cex=0.5, col=pointcolorframe$pointcolor)
+    }
+    for(x in 1:nrow(segment.smoothed.CNA.object$segRows)){
+      segments(x0=  segment.smoothed.CNA.object$segRows[x,1], x1=segment.smoothed.CNA.object$segRows[x,2],
+               y0=segment.smoothed.CNA.object$output[x,"seg.mean"], y1=segment.smoothed.CNA.object$output[x,"seg.mean"],
+               col="red", lwd=2)
+    }
+    fr = data.frame(chrom=smoothed.CNA.object$chrom, loc=smoothed.CNA.object$maploc, val=smoothed.CNA.object$cnvplot)
+    nr = 1
+    for(i in 1:(nrow(fr)-1)){
+      if(fr$chrom[i]!=fr$chrom[i+1]){
+        abline(v=as.numeric(row.names(fr)[i])+0.5, col="grey")
+        chrname= gsub(pattern = "chr", replacement = "", x = fr[i,"chrom"])
+        ypos = ifelse(nr %% 2 == 1, 2, 1.8)
+        nr=nr+1
+        text(x = i, adj=c(1,0), labels = chrname, y = ypos)
+      }
+    }
+    if(lines_only==F){
+      relevant_genes = read.table("~/nanocns/relevant_genes_with_chm13v2_1Mb_bin_nrs.bed", header=T)
+      fr$start=fr$loc-1e6
+      for(i in 1:nrow(relevant_genes)){
+        genestart = relevant_genes[i,"start"]
+        genechrom = relevant_genes[i,"chrom"]
+        genechrom = strsplit(genechrom, split="hr")[[1]][2]
+        genechrom=ifelse(nchar(genechrom)==1, paste0("chr0", genechrom), paste0("chr", genechrom))
+        binline = fr[fr$chrom==genechrom&fr$start<genestart&(fr$start+2e6)>genestart,]
+        ycoord = binline$val
+        text(x=as.numeric(row.names(binline)), y=ycoord-0.1+relevant_genes[i,"yoffset"], cex=0.5, srt=-90,adj=c(0.5,1), labels = relevant_genes[i, "name"], pos=1)
+        points(x=as.numeric(row.names(binline)), y=ycoord, col="red")
+      }}
   }
-  
-  relevant_genes = read.table("~/nanocns/relevant_genes_with_chm13v2_1Mb_bin_nrs.bed", header=T)
-  fr$start=fr$loc-1e6
-  
-  for(i in 1:nrow(relevant_genes)){
-    genestart = relevant_genes[i,"start"]
-    genechrom = relevant_genes[i,"chrom"]
-    genechrom = strsplit(genechrom, split="hr")[[1]][2]
-    genechrom=ifelse(nchar(genechrom)==1, paste0("chr0", genechrom), paste0("chr", genechrom))
-    binline = fr[fr$chrom==genechrom&fr$start<genestart&(fr$start+2e6)>genestart,]
-    
-    ycoord = binline$val
-    text(x=as.numeric(row.names(binline)), y=ycoord-0.1+relevant_genes[i,"yoffset"], cex=0.5, srt=-90,adj=c(0.5,1), labels = relevant_genes[i, "name"], pos=1)
-    points(x=as.numeric(row.names(binline)), y=ycoord, col="red")
-  }
-  
+  output = list(pointdata=pointcolorframe, segdata=segment.smoothed.CNA.object)
+  return(output)
 }
 plot_cnv_from_live_dir_DNAcopy=function(directory){
   #directory = "~/nanocns/data/pmc_live_12/"
   samtools = "~/nanocns/software/samtools-1.17/samtools"
   
-  if(dir.exists(paste0(directory,"/merged_bams/"))==F){system(paste0("mkdir ", directory,"merged_bams/"))}else{
+  if(dir.exists(paste0(directory,"/merged_bams/"))==F){system(paste0("mkdir ", directory,"/merged_bams/"))}else{
     system(paste0("rm ", directory,"/merged_bams/merged_bam.bam"))
   }
   
   system(paste0(samtools, " merge -@ 10 -O BAM -o ",directory,"/merged_bams/merged_bam.bam ", directory,"/*.bam" ))
   
-  plot_cnv_from_bam_DNAcopy(paste0(directory,"/merged_bams/merged_bam.bam"))
+  out=plot_cnv_from_bam_DNAcopy(paste0(directory,"/merged_bams/merged_bam.bam"))
   
 }
-
