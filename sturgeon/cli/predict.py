@@ -67,7 +67,7 @@ def predict(
 
         logging.info("Starting prediction")
 
-        inference_session, probes_df, decoding_dict, temperatures, weight_matrix, merge_dict = load_model(model)                
+        inference_session, probes_df, decoding_dict, temperatures, merge_dict = load_model(model)                
 
         for bed_file in bed_files:
 
@@ -78,7 +78,6 @@ def predict(
                 bed_file = bed_file,
                 decoding_dict = deepcopy(decoding_dict),
                 probes_df = probes_df,
-                weight_matrix = weight_matrix,
                 temperatures = temperatures,
                 merge_dict = merge_dict,
             )

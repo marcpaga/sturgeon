@@ -107,13 +107,6 @@ def load_model(model_file):
             logging.debug("No calibration matrix in zip file")
             temperatures = None
 
-        logging.debug("Loading weight scores matrix")
-        try:
-            weight_matrix = np.load(zipf.open('weight_scores.npz'))
-        except KeyError:
-            logging.debug("No weight scores matrix in zip file")
-            weight_matrix = None
-
         logging.info("Starting inference session")
         so = onnxruntime.SessionOptions()
         so.inter_op_num_threads = 1
@@ -125,7 +118,7 @@ def load_model(model_file):
             sess_options = so,
         )
 
-    return inference_session, probes_df, decoding_dict, temperatures, weight_matrix, merge_dict
+    return inference_session, probes_df, decoding_dict, temperatures, merge_dict
 
 
 def predict_sample(
@@ -133,7 +126,6 @@ def predict_sample(
     bed_file: str,
     decoding_dict: dict,
     probes_df: pd.DataFrame,
-    weight_matrix: np.ndarray,
     temperatures: np.ndarray,
     merge_dict: dict, 
 ):
@@ -169,8 +161,6 @@ def predict_sample(
     if requires_merging:
         calibrated_df, decoding_dict = merge_predictions(calibrated_df, decoding_dict, merge_dict)
         
-    encoding_dict = {v:k for k, v in decoding_dict.items()}
-
     n = np.sum(x != NOMEASURE_VALUE)
 
     avg_scores = {
