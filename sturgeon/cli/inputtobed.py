@@ -11,6 +11,7 @@ def filetobed(
     output_path: str,
     source: str,
     probes_file: str,
+    reference_genome: Optional[str],
     margin: Optional[int] = 25,
     neg_threshold: Optional[float] = 0.3,
     pos_threshold: Optional[float] = 0.7,
@@ -18,6 +19,13 @@ def filetobed(
 
     logging.info("Sturgeon start up")
     logging.info("File to bed program")
+
+    if reference_genome is not None:
+        probes_file = os.path.join(
+            os.path.dirname(__file__), 
+            '../include/static', 
+            'probes_{}.bed'.format(reference_genome)
+        )
 
     if not os.path.exists(probes_file):
         err_msg = '''

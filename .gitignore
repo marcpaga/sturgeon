@@ -80,3 +80,4 @@ main.dist
 main.onefile-build
 *.bin
 bin
+scripts
