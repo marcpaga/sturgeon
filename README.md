@@ -4,6 +4,8 @@ Sturgeon is a CNS neural network classifier based on the reference dataset publi
 
 For more information on the classifier please refer to our [manuscript](https://www.medrxiv.org/content/10.1101/2023.01.25.23284813v1).
 
+If you use Sturgeon, please consider starring this repository 🌟
+
 ## Installation
 
 Get the repository.
