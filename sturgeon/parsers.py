@@ -213,7 +213,7 @@ def register_inputtobed(parser):
         '--reference-genome',
         type = str,
         default = None,
-        options = ['chm13v2', 'hg38'],
+        choices = ['chm13v2', 'hg38'],
         help = '''
         Given the used reference genome for alignment, use the appropiate
         probes file. If this is given, you do not have to provide a probes file.
