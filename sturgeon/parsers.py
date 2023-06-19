@@ -202,9 +202,22 @@ def register_inputtobed(parser):
         '--probes-file',
         type = str,
         default = os.path.join(
-            os.path.dirname(__file__), 'include/static', 'probes.bed'
+            os.path.dirname(__file__), 'include/static', 'probes_chm13v2.bed'
         ),
-        help = 'Bed file with probe names and genomic locations'
+        help = '''
+        Bed file with probe names and genomic locations. If this is given, you
+        do not have to specify the reference genome.
+        '''
+    )
+    subparser.add_argument(
+        '--reference-genome',
+        type = str,
+        default = None,
+        choices = ['chm13v2', 'hg38'],
+        help = '''
+        Given the used reference genome for alignment, use the appropiate
+        probes file. If this is given, you do not have to provide a probes file.
+        '''
     )
     subparser.add_argument(
         '--margin',
@@ -242,6 +255,7 @@ def run_inputtobed(args):
         output_path = args.output_path,
         source = args.source,
         probes_file = args.probes_file,
+        reference_genome = args.reference_genome,
         margin = args.margin,
         neg_threshold = args.neg_threshold,
         pos_threshold = args.pos_threshold,

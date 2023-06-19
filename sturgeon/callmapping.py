@@ -4,10 +4,14 @@ from copy import deepcopy
 from typing import Optional, List
 import logging
 from contextlib import contextmanager
+import warnings
 
 import pandas as pd
 import numpy as np
-from modbampy import ModBam
+try:
+    from modbampy import ModBam
+except ImportError:
+    warnings.warn('Error loading modbampy, bam functionalities will not work')
 
 @contextmanager
 def SuppressPandasWarning():
@@ -78,6 +82,8 @@ def map_methyl_calls_to_probes_chr(
     """Maps calls per read to probe locations in a chromosome
     """
 
+    probes_df = probes_df[probes_df['start'] > -1]
+    probes_df = probes_df.sort_values(['start'])
     probes_df.reset_index(inplace = True, drop = True)
     methyl_calls_per_read = methyl_calls_per_read.sort_values(['reference_pos'])
     methyl_calls_per_read.reset_index(inplace = True, drop = True)
@@ -118,7 +124,7 @@ def map_methyl_calls_to_probes_chr(
             else:
                 continue
 
-            probes_df.loc[:, 'total_calls'] = probes_df.loc[:, 'methylation_calls'] + probes_df.loc[:, 'unmethylation_calls']
+        probes_df['total_calls'] = probes_df['methylation_calls'] + probes_df['unmethylation_calls']
 
     return probes_df
 
