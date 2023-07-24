@@ -89,7 +89,7 @@ Please refer to each utility `--help` for additional info.
 
 Convert input files (bam or txt) to bed files that can be used as input to predict the CNS type.
 
-It is critical that the data is correctly aligned to a reference genome, otherwise the results will be wrong. We have used the Telomere-to-telomere reference genome (CHM13v2) for all of our work, and it is the default setting for this program. We encourage you to also use it, as we have not thoroughly tested other reference genomes. If you have aligned your data to `hg38`, we encourage you to re-align (or "lift it" with [CrossMap](https://crossmap.sourceforge.net/#)) it to the T2T reference genome. If you still prefer to use `hg38`, then you can pass `--reference-genome hg38` to use the correct probe coordinates. The `hg38` coordinates have been generated via liftover, this lead to the loss of 226 out of 427680 probes.
+It is critical that the data is correctly aligned to a reference genome, otherwise the results will be wrong. We have used the Telomere-to-telomere reference genome (CHM13v2) for all of our work, and it is the default setting for this program. We encourage you to also use it, as we have not thoroughly tested other reference genomes. If you have aligned your data to `hg38`, we encourage you to re-align (or "lift it" with [CrossMap](https://crossmap.sourceforge.net/#)) it to the T2T reference genome. If you still prefer to use `hg38`, then you can pass `--reference-genome hg38` to use the correct probe coordinates. The `hg38` coordinates have been generated via liftover, this lead to the loss of 26 out of 427680 probes.
 
 ### Alignment bam files (Guppy)
 
