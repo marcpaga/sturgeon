@@ -73,6 +73,36 @@ def load_bed_file(bed_file: str):
     )
     return bed_df
 
+def read_probes_file(probes_file: str):
+
+    samtools_bed_file = False
+    with open(probes_file, 'r') as handle:
+        for line in handle:
+            break
+        if line.startswith('#'):
+            samtools_bed_file = True
+            column_header = line.strip('#').strip('\n').split('\t')
+
+    if samtools_bed_file:
+        probes_df = pd.read_csv(
+            probes_file,
+            header = None,
+            index_col = None,
+            sep = '\t',
+            comment='#',
+            names=column_header,
+        )
+    # normal probes file
+    else:
+        probes_df = pd.read_csv(
+            probes_file,
+            header = 0,
+            index_col = None,
+            sep = ' ',
+        )
+
+    return probes_df
+
 def validate_megalodon_file(megalodon_file):
     """Very simple check of the first line in the file to check
     for correct column names.

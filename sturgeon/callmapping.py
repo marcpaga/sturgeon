@@ -13,6 +13,8 @@ try:
 except ImportError:
     warnings.warn('Error loading modbampy, bam functionalities will not work')
 
+from sturgeon.utils import read_probes_file
+
 @contextmanager
 def SuppressPandasWarning():
     with pd.option_context("mode.chained_assignment", None):
@@ -270,12 +272,7 @@ def bam_path_to_bed(
     pos_threshold: Optional[float] = 0.7,
 ):
 
-    probes_df = pd.read_csv(
-        probes_file, 
-        header = 0, 
-        index_col = None, 
-        sep = ' ',
-    )
+    probes_df = read_probes_file(probes_df)
 
     output_files = list()
 
@@ -352,12 +349,7 @@ def mega_file_to_bed(
     pos_threshold: Optional[float] = 0.7,
 ) -> pd.DataFrame:
 
-    probes_df = pd.read_csv(
-        probes_file, 
-        header = 0, 
-        index_col = None, 
-        sep = ' ',
-    )
+    probes_df = read_probes_file(probes_file)
 
     logging.info(
         '''
@@ -564,12 +556,7 @@ def modkit_file_to_bed(
     modkit_df_m = modkit_df_m[modkit_df_m['reference_pos'] != -1]
     modkit_df_m = modkit_df_m[modkit_df_m['chr'] != '.']
 
-    probes_df = pd.read_csv(
-        probes_file, 
-        header = 0, 
-        index_col = None, 
-        sep = ' ',
-    )
+    probes_df = read_probes_file(probes_file)
 
     probes_methyl_df = deepcopy(probes_df)
     logging.info('Processing modkit file: {}'.format(input_file))

@@ -24,8 +24,10 @@ from sturgeon.utils import (
     creation_date, 
     validate_megalodon_file,
 )
+
 from sturgeon.prediction import predict_sample, load_model
 from sturgeon.plot import plot_prediction, plot_prediction_over_time
+from sturgeon.utils import read_probes_file
 
 
 def live(
@@ -53,12 +55,7 @@ def live(
 
     if source == 'guppy':
 
-        probes_df = pd.read_csv(
-            probes_file, 
-            header = 0, 
-            index_col = None, 
-            sep = ' ',
-        )
+        probes_df = read_probes_file(probes_file)
         
         live_guppy(
             input_path = input_path,
