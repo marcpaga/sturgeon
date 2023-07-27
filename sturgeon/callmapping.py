@@ -480,5 +480,203 @@ def mega_path_to_bed(
     )
 
 
-                
+def modkit_file_to_bed(
+    input_file: str,
+    probes_file: str,
+    margin: Optional[int] = 25,
+    neg_threshold: Optional[float] = 0.3,
+    pos_threshold: Optional[float] = 0.7,
+    fivemc_code:str = 'm',
+    fivehmc_code: str = 'h',
+) -> pd.DataFrame:
+    
+    mandatory_columns = [
+        "read_id", 
+        "chrom",
+        "ref_position",
+        "mod_qual",
+        "mod_code",
+        "canonical_base",
+        "modified_primary_base",
+    ]
+    modkit_df = pd.read_csv(
+        input_file, 
+        sep = '\t', 
+        header = 0, 
+        index_col = None, 
+        usecols= mandatory_columns
+    )
+
+    # if 5hmc is present, merge 5mc and 5hmc scores
+    present_mods = modkit_df['mod_code'].unique()
+
+    try:
+        assert fivemc_code in present_mods
+    except AssertionError:
+        logging.error('5mC code: {}. Not found in modkit file'.format(fivemc_code))
+        return None
+    
+    if len(modkit_df['mod_code'].unique()) > 1 and fivehmc_code in present_mods:
+
+        modkit_df_m = modkit_df[modkit_df['mod_code'] == fivemc_code].reset_index(inplace=False, drop=True)
+        modkit_df_h = modkit_df[modkit_df['mod_code'] == fivehmc_code].reset_index(inplace=False, drop=True)
+
+        try:
+            assert len(modkit_df_m) == len(modkit_df_h)
+        except AssertionError:
+            logging.error('Expected same number of 5mC ({}) and 5hmC ({})calls.'.format(len(modkit_df_m), len(modkit_df_h)))
+            return None
+        
+        try:
+            assert np.all(modkit_df_m['read_id'].astype(str) == modkit_df_h['read_id'].astype(str))
+        except AssertionError:
+            logging.error('Read ids between 5mC and 5hmC calls do not match. Maybe incomplete modkit file?')
+            return None
+
+        try:
+            assert np.all(modkit_df_m['ref_position'].astype(str) == modkit_df_h['ref_position'].astype(str))
+        except AssertionError:
+            logging.error('Mapping positions between 5mC and 5hmC calls do not match. Maybe incomplete modkit file?')
+            return None
+
+        try:
+            assert np.all(modkit_df_m['chrom'].astype(str) == modkit_df_h['chrom'].astype(str))
+        except AssertionError:
+            logging.error('Chromosome mappings between 5mC and 5hmC calls do not match. Maybe incomplete modkit file?')
+            return None
+        
+        modkit_df_m['mod_qual'] = modkit_df_m['mod_qual'] + modkit_df_h['mod_qual']
+        del modkit_df_h
+
+    else:
+        modkit_df_m = modkit_df
+
+    modkit_df_m = modkit_df_m.rename(columns={
+        'chrom': 'chr',
+        'ref_position': 'reference_pos',
+        'mod_qual': 'score'
+    })
+    modkit_df_m = modkit_df_m.drop(columns=[
+        'mod_code',
+        'canonical_base',
+        'modified_primary_base'
+    ])
+    modkit_df_m = modkit_df_m[modkit_df_m['reference_pos'] != -1]
+    modkit_df_m = modkit_df_m[modkit_df_m['chr'] != '.']
+
+    probes_df = pd.read_csv(
+        probes_file, 
+        header = 0, 
+        index_col = None, 
+        sep = ' ',
+    )
+
+    probes_methyl_df = deepcopy(probes_df)
+    logging.info('Processing modkit file: {}'.format(input_file))
+
+    chromosomes = np.unique(probes_df['chr'])
+
+    probes_methyl_df['methylation_calls'] = 0
+    probes_methyl_df['unmethylation_calls'] = 0
+    probes_methyl_df['total_calls'] = 0
+
+    calls_per_probe = list()
+    for chrom in chromosomes:
+
+        calls_per_probe_chr =  map_methyl_calls_to_probes_chr(
+            probes_df =  probes_methyl_df[probes_methyl_df['chr'] == chrom.item()],
+            methyl_calls_per_read = modkit_df_m[modkit_df_m['chr'] == 'chr'+str(chrom.item())],
+            margin = margin, 
+            neg_threshold = neg_threshold,
+            pos_threshold = pos_threshold,
+        )
+        calls_per_probe.append(calls_per_probe_chr)
+
+        calls = calls_per_probe_chr['total_calls'].sum()
+        logging.debug(
+            '''
+            Found a total of {} methylation array sites on chromosome {}
+            '''.format(calls, chrom)
+        )
+
+    calls_per_probe = pd.concat(calls_per_probe)
+    return calls_per_probe
+
+
+def modkit_path_to_bed(
+    input_path: List[str],
+    output_path: str,
+    probes_file: str,
+    margin: Optional[int] = 25,
+    neg_threshold: Optional[float] = 0.3,
+    pos_threshold: Optional[float] = 0.7,
+    fivemc_code:str = 'c',
+    fivehmc_code: str = 'h',
+):
+    
+    output_files = list()
+    for modkit_file in input_path:
+
+        logging.info(
+            '''
+            Found methylation modkit file: {}
+            '''.format(modkit_file)
+        )
+        
+        modkit_name = Path(modkit_file).stem
+
+        output_file = os.path.join(
+            output_path,
+            modkit_name + '_probes_methyl_calls.txt'
+        )
+        output_files.append(output_file)
+
+        if os.path.exists(output_file):
+            logging.info(
+                '''
+                Skipping, probe_methyl_calls exists: {}
+                '''.format(output_file)
+            )
+            continue
+
+        calls_per_probe = modkit_file_to_bed(
+            input_file = modkit_file,
+            probes_file = probes_file,
+            margin = margin,
+            neg_threshold = neg_threshold,
+            pos_threshold = pos_threshold,
+            fivemc_code = fivemc_code,
+            fivehmc_code = fivehmc_code,
+        )
+
+        if calls_per_probe is None:
+            logging.info(
+                '''
+                Modkit file processing gave an error, skipping: {}
+                '''.format(modkit_file)
+            )
+            continue
+
+        calls_per_probe.to_csv(
+            output_file, header = True, index = False, sep = '\t'
+        )
+
+    merged_output_file = os.path.join(
+        output_path, 
+        'merged_probes_methyl_calls.txt'
+    )
+    merge_probes_methyl_calls(
+        output_files, 
+        merged_output_file
+    )
+
+    bed_output_file = os.path.join(
+        output_path,
+        'merged_probes_methyl_calls.bed'
+    )
+    probes_methyl_calls_to_bed(
+        merged_output_file,
+        bed_output_file
+    )
+
         

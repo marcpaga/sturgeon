@@ -2,8 +2,12 @@ import os
 from typing import Optional, List
 import logging
 
-from sturgeon.callmapping import bam_path_to_bed, mega_path_to_bed
-from sturgeon.utils import validate_megalodon_file
+from sturgeon.callmapping import (
+    bam_path_to_bed, 
+    mega_path_to_bed, 
+    modkit_path_to_bed,
+)
+from sturgeon.utils import validate_megalodon_file, validate_modkit_file
 import pysam
 
 def filetobed(
@@ -75,6 +79,17 @@ def filetobed(
     elif source == 'megalodon':
 
         megatobed(
+            input_path = input_path,
+            output_path = output_path,
+            probes_file = probes_file,
+            margin = margin,
+            neg_threshold = neg_threshold,
+            pos_threshold = pos_threshold,
+        )
+
+    elif source == 'modkit':
+        
+        modkittobed(
             input_path = input_path,
             output_path = output_path,
             probes_file = probes_file,
@@ -198,10 +213,60 @@ def megatobed(
         pos_threshold = pos_threshold,
     )
 
-
+def modkittobed(
+    input_path: List[str],
+    output_path: str,
+    probes_file: str,
+    margin: Optional[int] = 25,
+    neg_threshold: Optional[float] = 0.3,
+    pos_threshold: Optional[float] = 0.7,
+    fivemc_code: str = 'm',
+    fivehmc_code: str = 'h',
+):
     
+    logging.info("Modkit to bed program")
 
+    txt_files = list()
+    if os.path.isfile(input_path):
+        txt_files.append(input_path)
+    elif os.path.isdir(input_path):
+        for f in os.listdir(input_path):
+            if not f.endswith('.txt'):
+                continue
+            txt_files.append(os.path.join(input_path, f)) 
+    else:
+        err_msg = '''
+        --input-path must be a directory or file, given: {}
+        '''.format(input_path)
+        logging.error(err_msg)
+        raise ValueError(err_msg)
 
+    modkit_files = list()
+    for m in txt_files:
+        success, msg = validate_modkit_file(m)
+        if success:
+            modkit_files.append(m)
+        else:
+            logging.error(
+                '''
+                File {}, did not pass validation either not a modkit file or
+                an invalid modkit file. Reason: {}.
+                '''.format(m, msg)
+            )
+
+    logging.info("Found a total of {} modkit files".format(len(modkit_files)))
+    logging.info("Output will be saved in: {}".format(output_path))
+
+    modkit_path_to_bed(
+        input_path = modkit_files,
+        output_path = output_path,
+        probes_file = probes_file,
+        margin = margin,
+        neg_threshold = neg_threshold,
+        pos_threshold = pos_threshold,
+        fivemc_code = fivemc_code,
+        fivehmc_code = fivehmc_code,
+    )
 
 
 

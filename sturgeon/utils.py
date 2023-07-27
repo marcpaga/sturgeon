@@ -108,6 +108,40 @@ def validate_megalodon_file(megalodon_file):
     return True, None
 
 
+def validate_modkit_file(modkit_file):
+    """Very simple check of the first line in the file to check
+    for correct column names.
+
+    Args:
+        modkit_file (str): path to the file to be validated
+
+    Returns:
+        (bool, str): True, None if it passes the validation; False, error message
+        if it failes.
+    """
+
+    mandatory_columns = [
+        "read_id", 
+        "chrom",
+        "ref_position",
+        "mod_qual",
+        "mod_code",
+        "canonical_base",
+        "modified_primary_base",
+    ]
+
+    with open(modkit_file, 'r') as f:
+        for line in f:
+            break
+
+    column_names = line.strip('\n').split('\t')
+    for mc in mandatory_columns:
+        if mc not in column_names:
+            err_msg = "{} column missing in modkit file".format(mc)
+            return False, err_msg
+
+    return True, None
+
 def validate_bed_file(bed_df: pd.DataFrame, probes_df: pd.DataFrame):
     """Validate the contents of a bed file
 
