@@ -62,6 +62,7 @@ demo/bam/*.txt
 demo/bam/*.bed
 demo/bam/*.csv
 demo/bam/*.pdf
+demo/bam/*.bam
 demo/bam/out
 demo/bam/out_1
 demo/bam/out_2
@@ -80,4 +81,5 @@ main.dist
 main.onefile-build
 *.bin
 bin
-scripts
+
+dev
