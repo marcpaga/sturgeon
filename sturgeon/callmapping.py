@@ -479,7 +479,6 @@ def modkit_file_to_bed(
     neg_threshold: Optional[float] = 0.3,
     pos_threshold: Optional[float] = 0.7,
     fivemc_code:str = 'm',
-    fivehmc_code: str = 'h',
 ) -> pd.DataFrame:
     
     mandatory_columns = [
@@ -499,62 +498,22 @@ def modkit_file_to_bed(
         usecols= mandatory_columns
     )
 
-    # if 5hmc is present, merge 5mc and 5hmc scores
-    present_mods = modkit_df['mod_code'].unique()
+    modkit_df = modkit_df[modkit_df['mod_code'] == fivemc_code]
+    modkit_df = modkit_df[modkit_df['canonical_base'] == 'C']
+    modkit_df = modkit_df[modkit_df['modified_primary_base'] == 'C']
 
-    try:
-        assert fivemc_code in present_mods
-    except AssertionError:
-        logging.error('5mC code: {}. Not found in modkit file'.format(fivemc_code))
-        return None
-    
-    if len(modkit_df['mod_code'].unique()) > 1 and fivehmc_code in present_mods:
-
-        modkit_df_m = modkit_df[modkit_df['mod_code'] == fivemc_code].reset_index(inplace=False, drop=True)
-        modkit_df_h = modkit_df[modkit_df['mod_code'] == fivehmc_code].reset_index(inplace=False, drop=True)
-
-        try:
-            assert len(modkit_df_m) == len(modkit_df_h)
-        except AssertionError:
-            logging.error('Expected same number of 5mC ({}) and 5hmC ({})calls.'.format(len(modkit_df_m), len(modkit_df_h)))
-            return None
-        
-        try:
-            assert np.all(modkit_df_m['read_id'].astype(str) == modkit_df_h['read_id'].astype(str))
-        except AssertionError:
-            logging.error('Read ids between 5mC and 5hmC calls do not match. Maybe incomplete modkit file?')
-            return None
-
-        try:
-            assert np.all(modkit_df_m['ref_position'].astype(str) == modkit_df_h['ref_position'].astype(str))
-        except AssertionError:
-            logging.error('Mapping positions between 5mC and 5hmC calls do not match. Maybe incomplete modkit file?')
-            return None
-
-        try:
-            assert np.all(modkit_df_m['chrom'].astype(str) == modkit_df_h['chrom'].astype(str))
-        except AssertionError:
-            logging.error('Chromosome mappings between 5mC and 5hmC calls do not match. Maybe incomplete modkit file?')
-            return None
-        
-        modkit_df_m['mod_qual'] = modkit_df_m['mod_qual'] + modkit_df_h['mod_qual']
-        del modkit_df_h
-
-    else:
-        modkit_df_m = modkit_df
-
-    modkit_df_m = modkit_df_m.rename(columns={
+    modkit_df = modkit_df.rename(columns={
         'chrom': 'chr',
         'ref_position': 'reference_pos',
         'mod_qual': 'score'
     })
-    modkit_df_m = modkit_df_m.drop(columns=[
+    modkit_df = modkit_df.drop(columns=[
         'mod_code',
         'canonical_base',
         'modified_primary_base'
     ])
-    modkit_df_m = modkit_df_m[modkit_df_m['reference_pos'] != -1]
-    modkit_df_m = modkit_df_m[modkit_df_m['chr'] != '.']
+    modkit_df = modkit_df[modkit_df['reference_pos'] != -1]
+    modkit_df = modkit_df[modkit_df['chr'] != '.']
 
     probes_df = read_probes_file(probes_file)
 
@@ -572,7 +531,7 @@ def modkit_file_to_bed(
 
         calls_per_probe_chr =  map_methyl_calls_to_probes_chr(
             probes_df =  probes_methyl_df[probes_methyl_df['chr'] == chrom.item()],
-            methyl_calls_per_read = modkit_df_m[modkit_df_m['chr'] == 'chr'+str(chrom.item())],
+            methyl_calls_per_read = modkit_df[modkit_df['chr'] == 'chr'+str(chrom.item())],
             margin = margin, 
             neg_threshold = neg_threshold,
             pos_threshold = pos_threshold,
@@ -598,7 +557,6 @@ def modkit_path_to_bed(
     neg_threshold: Optional[float] = 0.3,
     pos_threshold: Optional[float] = 0.7,
     fivemc_code:str = 'c',
-    fivehmc_code: str = 'h',
 ):
     
     output_files = list()
@@ -633,7 +591,6 @@ def modkit_path_to_bed(
             neg_threshold = neg_threshold,
             pos_threshold = pos_threshold,
             fivemc_code = fivemc_code,
-            fivehmc_code = fivehmc_code,
         )
 
         if calls_per_probe is None:

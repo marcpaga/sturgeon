@@ -19,6 +19,7 @@ def filetobed(
     margin: Optional[int] = 25,
     neg_threshold: Optional[float] = 0.3,
     pos_threshold: Optional[float] = 0.7,
+    fivemc_code: str = 'm',
 ):
 
     logging.info("Sturgeon start up")
@@ -96,6 +97,7 @@ def filetobed(
             margin = margin,
             neg_threshold = neg_threshold,
             pos_threshold = pos_threshold,
+            fivemc_code = fivemc_code,
         )
 
 
@@ -221,7 +223,6 @@ def modkittobed(
     neg_threshold: Optional[float] = 0.3,
     pos_threshold: Optional[float] = 0.7,
     fivemc_code: str = 'm',
-    fivehmc_code: str = 'h',
 ):
     
     logging.info("Modkit to bed program")
@@ -265,7 +266,6 @@ def modkittobed(
         neg_threshold = neg_threshold,
         pos_threshold = pos_threshold,
         fivemc_code = fivemc_code,
-        fivehmc_code = fivehmc_code,
     )
 
 
