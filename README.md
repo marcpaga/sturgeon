@@ -91,6 +91,29 @@ Convert input files (bam or txt) to bed files that can be used as input to predi
 
 It is critical that the data is correctly aligned to a reference genome, otherwise the results will be wrong. We have used the Telomere-to-telomere reference genome (CHM13v2) for all of our work, and it is the default setting for this program. We encourage you to also use it, as we have not thoroughly tested other reference genomes. If you have aligned your data to `hg38`, we encourage you to re-align (or "lift it" with [CrossMap](https://crossmap.sourceforge.net/#)) it to the T2T reference genome. If you still prefer to use `hg38`, then you can pass `--reference-genome hg38` to use the correct probe coordinates. The `hg38` coordinates have been generated via liftover, this lead to the loss of 26 out of 427680 probes.
 
+### Extract modification calls (modkit)
+
+If you have bam files that contain modifications basecalled with Guppy or Dorado, this is the recommended option. You will have to install [modkit](https://github.com/nanoporetech/modkit), the official ONT tool to extract modifications. Once installed, given a bam file you should do the following:
+
+If, besides 5mC you also have 5hmC modification calls, you should add them up via:
+```
+modkit adjust-mods --convert h m INPUT.bam OUTPUT.bam
+```
+The reasoning behind this is that both 5mC and 5hmC poorly react to bisulfite treatment [Huang et al., 2010](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2811190/), therefore 5hmC sites would appear as 5mC in a methylation microarray experiment. We trained on those kind of experiments, we therefore think that adding the two scores up reflects the most the training data. 
+
+You can then extract the 5mC scores using:
+```
+modkit extract OUTPUT.bam OUTPUT.txt
+```
+
+This `OUTPUT.txt` can then be directly used in sturgeon using:
+```
+sturgeon inputtobed -i MODKIT_OUTPUT_DIR -o OUTPUT_DIR -s modkit
+```
+
+Please note that Sturgeon will only use 5mC scores, other modification scores will be filtered out.
+Please refer to the [modkit wiki](https://nanoporetech.github.io/modkit/quick_start.html) in case these commands change.
+
 ### Alignment bam files (Guppy)
 
 Convert a bam that contains methylation calls into the adequate format (.bed) so that it can be used for prediction.

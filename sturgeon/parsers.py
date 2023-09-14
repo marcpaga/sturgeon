@@ -194,7 +194,7 @@ def register_inputtobed(parser):
         '-s', '--source',
         type = str,
         required = True,
-        choices = ['guppy', 'megalodon'],
+        choices = ['guppy', 'megalodon', 'modkit'],
         help='Output file format'
     )
 
@@ -243,6 +243,14 @@ def register_inputtobed(parser):
         Positions with scores above this threshold will be considered methylated
         '''
     )
+    subparser.add_argument(
+        '--fivemc-code',
+        type=str,
+        default = 'm',
+        help='''
+        Onle letter code used to annotate 5mC in modkit files
+        '''
+    )
 
     subparser.set_defaults(func=run_inputtobed)
 
@@ -259,6 +267,7 @@ def run_inputtobed(args):
         margin = args.margin,
         neg_threshold = args.neg_threshold,
         pos_threshold = args.pos_threshold,
+        fivemc_code = args.fivemc_code,
     )
 
 def register_models(parser):

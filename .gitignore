@@ -75,6 +75,7 @@ demo/mega/out
 demo/mega/out_live
 demo/tmp
 demo/bed/out
+demo/modkit
 
 main.build
 main.dist
@@ -83,3 +84,4 @@ main.onefile-build
 bin
 
 dev
+tmp
