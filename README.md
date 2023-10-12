@@ -2,7 +2,7 @@
 
 Sturgeon is a CNS neural network classifier based on the reference dataset published by [Capper et al., 2018](https://doi.org/10.1038/nature26000).
 
-For more information on the classifier please refer to our [paper]([https://www.medrxiv.org/content/10.1101/2023.01.25.23284813v1](https://www.nature.com/articles/s41586-023-06615-2)).
+For more information on the classifier please refer to our [paper](https://www.nature.com/articles/s41586-023-06615-2).
 
 ![image](https://github.com/marcpaga/sturgeon/assets/35224321/e512824b-689a-4437-8664-48407db744f3)
 
