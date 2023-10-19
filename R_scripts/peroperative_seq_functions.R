@@ -88,6 +88,7 @@ functioncheck_guppy_R10 = function(){
   
   system("rm -r ~/nanocns/data/functioncheck_R10/guppyres")
 }
+
 wrappert = function(main_folder,fast5, iteration, bcoverride=F){
   #this wrapper runs megalodon on a fast5 file
   #then uses qcat to split out the most frequent barcode
@@ -139,12 +140,15 @@ wrappert = function(main_folder,fast5, iteration, bcoverride=F){
 fix_name=function(x){
   return(gsub(gsub(x = x, pattern = "\\.\\.\\.", replacement = " - "), pattern = "\\.", replacement = " "))}
 
-add_and_plot=function(merged_data, result_file){
+add_and_plot=function(merged_data, result_file, outfile="x"){
   
   if(exists("color_translation")==F){color_translation=readRDS("~/nanocns/R-scripts/color_translation.rds")}
   reslist_2 = t(data.frame(read.table(result_file, sep=",")))
   reslist_2=reslist_2[2:nrow(reslist_2),]
   colnames(reslist_2)=c("class", "score")
+  tm = Sys.time()
+  tm= paste(format(as.POSIXct(tm), format = "%H:%M"))
+  reslist_2=rbind(reslist_2,data.frame(class="TIME", score=tm))
   
   if(nrow(merged_data)==0){
     return(reslist_2)
@@ -152,15 +156,83 @@ add_and_plot=function(merged_data, result_file){
     
     mgd = merge(merged_data, reslist_2, by="class") 
     colnames(mgd)[ncol(mgd)]=paste0("iteration_", ncol(mgd)-1)
-    plot('', xlim=c(0,ifelse(ncol(mgd)>5, ncol(mgd)+5, 10)), ylim=c(0,1), main="confidence over time", xlab="iteration", ylab="confidence") 
-    for(i in 1:nrow(mgd)){
+    
+    plot('', xlim=c(0,ifelse(ncol(mgd)>5, ncol(mgd)+5, 10)), ylim=c(0,1), main="confidence over time", xlab="iteration", ylab="confidence",
+         xaxt="n") 
+    for(i in 1:(nrow(mgd)-1)){
       clr = unlist(unname(color_translation[mgd[i,"class"]]))
       lines(x = 0:(ncol(mgd)-2), y= as.numeric(mgd[i,2:ncol(mgd)]), col=clr)
       if(as.numeric(mgd[i,ncol(mgd)])>0.5){text(x=ncol(mgd), y=as.numeric(mgd[i,ncol(mgd)])-0.02, labels = mgd[i,"class"])}
     }
+    maxtics= ifelse(ncol(mgd)>5,ncol(mgd), ncol(mgd)+5)
+    axis(side = 1, at = 0:maxtics, labels = 1:(maxtics+1))
+    axis(side = 1, at = 0:(ncol(mgd)-2), labels = mgd[mgd$class=="TIME",2:ncol(mgd)], line=1, tick=F, cex.axis=0.7)
     abline(h=0.95, col="red")
     abline(h=0.80, col="orange")
-    return(mgd)}
+    return(mgd)
+    }
+}
+
+confidence_over_time_plot=function(merged_data){
+  if(exists("color_translation")==F){color_translation=readRDS("~/nanocns/R-scripts/color_translation.rds")}
+  mgd = merged_data
+  colnames(mgd)[ncol(mgd)]=paste0("iteration_", ncol(mgd)-1)
+  plot('', xlim=c(0,ifelse(ncol(mgd)>5, ncol(mgd)+5, 10)), ylim=c(0,1), main="confidence over time", xlab="iteration", ylab="confidence",
+       xaxt="n")
+  for(i in 1:(nrow(mgd)-1)){
+    clr = unlist(unname(color_translation[mgd[i,"class"]]))
+    lines(x = 0:(ncol(mgd)-2), y= as.numeric(mgd[i,2:ncol(mgd)]), col=clr)
+    if(as.numeric(mgd[i,ncol(mgd)])>0.5){text(x=ncol(mgd), y=as.numeric(mgd[i,ncol(mgd)])-0.02, labels = mgd[i,"class"])}
+  }
+    maxtics= ifelse(ncol(mgd)>5,ncol(mgd), ncol(mgd)+5)
+    axis(side = 1, at = 0:maxtics, labels = 1:(maxtics+1))
+    axis(side = 1, at = 0:(ncol(mgd)-2), labels = mgd[mgd$class=="TIME",2:ncol(mgd)], line=1, tick=F, cex.axis=0.7)
+    abline(h=0.95, col="red")
+    abline(h=0.80, col="orange")
+    #return(mgd)
+}
+
+wrappert_dorado_R10 = function(main_folder,fast5, iteration, bcoverride=F, include_unclassified=F){
+  #this wrapper runs dorado on a pod5 file
+  #then runs sturgeon on a selected barcode
+  #iteration = 3
+  #bcoverride = 1
+  #main_folder = "~/nanocns/data/guppytest"
+  #system(paste0("mkdir ", main_folder))
+  #fast5 = "/var/lib/minknow/data/AMC_run_1/no_sample/20230320_1146_MN40017_FAV81912_63a68867/fast5/FAV81912_63a68867_c5a6d74a_2.fast5"
+  out_folder = paste0(main_folder,"/iteration_",iteration)
+  
+  system(paste0("mkdir ",out_folder))
+  system(paste0("cp ", fast5," ", out_folder))
+  
+  #out_folder="~/nanocns/data/pod5_iteration/"
+  
+  dorado_command=paste0("~/nanocns/dorado/dorado-0.3.2-linux-x64/bin/dorado basecaller ~/nanocns/models/dna_r10.4.1_e8.2_400bps_hac@v4.2.0 ", out_folder,
+                       " --reference /home/sturgeon/nanocns/data/chm13_V2/chm13v2.0.fa --modified-bases 5mCG_5hmCG > ", out_folder,"/mapped.bam")
+  print("running dorado")
+  system(dorado_command)
+  
+  system(paste0("samtools sort -@ 10 ", out_folder, "/mapped.bam -o ",out_folder, "/mapped_srt.bam"))
+  system(paste0("rm ",out_folder, "/mapped.bam"))
+  
+  modkit_adjust = paste0("~/nanocns/modkit/modkit adjust-mods --convert h m ", out_folder, "/mapped_srt.bam ",out_folder, "/mapped_srt_adj.bam")
+  system(modkit_adjust)
+  system(paste0("rm ",out_folder, "/mapped_srt.bam"))
+  system(paste0('samtools index ', out_folder, "/mapped_srt_adj.bam"))
+  print("modkit extract")
+  modkit_extract = paste0("~/nanocns/modkit/modkit extract ",out_folder, "/mapped_srt_adj.bam ",out_folder,"/modkit_extract.txt" )
+  system(modkit_extract)
+  print("running sturgeon")
+  
+  system(paste0("~/Carlo/run_sturgeon_tobed_modkit.sh ",out_folder, " ",out_folder))
+  
+ # barcode = ifelse(nchar(bcoverride)==1, paste0("0", bcoverride), bcoverride)
+ # system(paste0("mv ", out_folder,"/guppy_out/barcode",barcode,"/*.bam ",main_folder,"/guppy_output_it",iteration,".bam"))
+ # 
+ # #include unclassified reads yes or no?
+ # if(include_unclassified==T){
+ #   system(paste0("mv ", out_folder,"/guppy_out/unclassified/*.bam ",main_folder,"/guppy_output_it",iteration,"_unclassified.bam"))}
+
 }
 
 wrappert_guppy_R10 = function(main_folder,fast5, iteration, bcoverride=F, include_unclassified=F){
@@ -203,6 +275,42 @@ wrappert_guppy_R10 = function(main_folder,fast5, iteration, bcoverride=F, includ
   #include unclassified reads yes or no?
   if(include_unclassified==T){
   system(paste0("mv ", out_folder,"/guppy_out/unclassified/*.bam ",main_folder,"/guppy_output_it",iteration,"_unclassified.bam"))}
+  
+  system(paste0("~/Carlo/sturgeon_guppy.sh ",main_folder))
+  
+  
+}
+
+#needs to be tested still
+wrappert_guppy_R10_guppy6.5 = function(main_folder,fast5, iteration, bcoverride=F, include_unclassified=F){
+  #this wrapper runs guppy on a fast5 file
+  #then runs sturgeon on a selected barcode
+  #iteration = 3
+  #bcoverride = 1
+  #main_folder = "~/nanocns/data/guppytest"
+  #system(paste0("mkdir ", main_folder))
+  #fast5 = "/var/lib/minknow/data/AMC_run_1/no_sample/20230320_1146_MN40017_FAV81912_63a68867/fast5/FAV81912_63a68867_c5a6d74a_2.fast5"
+  out_folder = paste0(main_folder,"/iteration_",iteration)
+  
+  system(paste0("mkdir ",out_folder))
+  system(paste0("cp ", fast5," ", out_folder))
+  
+  
+
+  guppy_command = paste0("/home/sturgeon/nanocns/software/guppy_v6.5.7/ont-guppy/bin/guppy_basecaller -i ",out_folder, " -s ", out_folder,"/guppy_out ",
+                         "-c ~/nanocns/software/guppy_v6.5.7/ont-guppy/data/dna_r10.4.1_e8.2_400bps_5khz_modbases_5mc_cg_hac_mk1c.cfg --device auto --bam_out ",
+                         "--disable_qscore_filtering --min_score_barcode_front 6 ",
+                         "--align_ref /home/sturgeon/nanocns/data/chm13_V2/chm13v2.0.fa --barcode_kits SQK-RBK114-24 ",
+                         "--chunk_size 2000 --chunks_per_runner 256 --chunks_per_caller 10000 --gpu_runners_per_device 4  --num_base_mod_threads 4 --allow_inferior_barcodes")
+  
+  system(guppy_command)
+  
+  barcode = ifelse(nchar(bcoverride)==1, paste0("0", bcoverride), bcoverride)
+  system(paste0("mv ", out_folder,"/guppy_out/barcode",barcode,"/*.bam ",main_folder,"/guppy_output_it",iteration,".bam"))
+  
+  #include unclassified reads yes or no?
+  if(include_unclassified==T){
+    system(paste0("mv ", out_folder,"/guppy_out/unclassified/*.bam ",main_folder,"/guppy_output_it",iteration,"_unclassified.bam"))}
   
   system(paste0("~/Carlo/sturgeon_guppy.sh ",main_folder))
   
@@ -431,8 +539,10 @@ plot_cnv_from_live_dir_depmix=function(directory){
 
 library(DNAcopy)
 
-plot_cnv_from_bam_DNAcopy = function(bam, makeplot=T, lines_only=F){
-  readCounts <- binReadCounts(bins, bamfiles=bam, isNotPassingQualityControls=NA)
+plot_cnv_from_bam_DNAcopy = function(bam, makeplot=T, lines_only=F, binsize=1e6){
+  
+  
+  readCounts <- binReadCounts(bins, bamfiles=bam, isNotPassingQualityControls=NA, minMapq=2, isDuplicate=NA, isSecondaryAlignment=NA)
   exportBins(readCounts, file="~/nanocns/bins_sample_counts_tmp.bed", format="bed", filter=F, logTransform=F)
   reference=read.table("~/nanocns/bins_export.bed", skip = 1)
   colnames(reference) = c("chrom", "start", "end", "name", "coverage", "orientation")
@@ -440,6 +550,8 @@ plot_cnv_from_bam_DNAcopy = function(bam, makeplot=T, lines_only=F){
   system("rm ~/nanocns/bins_sample_counts_tmp.bed")
   colnames(sample) = c("chrom", "start", "end", "name", "coverage", "orientation")
   totreads_title = sum(sample$coverage)
+  #print(totreads_title)
+  
   sample$coverage = as.numeric(sample$coverage)+0.001
   totreads = sum(sample$coverage)
   sample$refcov = reference$coverage
@@ -455,7 +567,7 @@ plot_cnv_from_bam_DNAcopy = function(bam, makeplot=T, lines_only=F){
   sample$logtr = log(sample$reltoref/mn, 2)
   sample$logtr=ifelse(sample$logtr>3,3, ifelse(sample$logtr<(-3),-3, sample$logtr))
   sample$chromname=ifelse(nchar(sample$chrom)==1, paste0("chr0", sample$chrom), paste0("chr", sample$chrom))
-  bam_cna = CNA(sample$logtr, chrom=sample$chromname, maploc=sample$start+1e6, data.type="logratio", sampleid = "cnvplot")
+  bam_cna = CNA(sample$logtr, chrom=sample$chromname, maploc=sample$start+binsize, data.type="logratio", sampleid = "cnvplot")
   smoothed.CNA.object <- smooth.CNA(bam_cna)
   segment.smoothed.CNA.object <- segment(smoothed.CNA.object, verbose=1)
   #plot(segment.smoothed.CNA.object, plot.type="w")
@@ -491,13 +603,13 @@ plot_cnv_from_bam_DNAcopy = function(bam, makeplot=T, lines_only=F){
     }
     if(lines_only==F){
       relevant_genes = read.table("~/nanocns/relevant_genes_with_chm13v2_1Mb_bin_nrs.bed", header=T)
-      fr$start=fr$loc-1e6
+      fr$start=fr$loc-binsize
       for(i in 1:nrow(relevant_genes)){
         genestart = relevant_genes[i,"start"]
         genechrom = relevant_genes[i,"chrom"]
         genechrom = strsplit(genechrom, split="hr")[[1]][2]
         genechrom=ifelse(nchar(genechrom)==1, paste0("chr0", genechrom), paste0("chr", genechrom))
-        binline = fr[fr$chrom==genechrom&fr$start<genestart&(fr$start+2e6)>genestart,]
+        binline = fr[fr$chrom==genechrom&fr$start<genestart&(fr$start+binsize*2)>genestart,]
         ycoord = binline$val
         text(x=as.numeric(row.names(binline)), y=ycoord-0.1+relevant_genes[i,"yoffset"], cex=0.5, srt=-90,adj=c(0.5,1), labels = relevant_genes[i, "name"], pos=1)
         points(x=as.numeric(row.names(binline)), y=ycoord, col="red")
@@ -519,3 +631,30 @@ plot_cnv_from_live_dir_DNAcopy=function(directory){
   out=plot_cnv_from_bam_DNAcopy(paste0(directory,"/merged_bams/merged_bam.bam"))
   
 }
+
+
+dorado_CNV_plotting = function(pod5_folder, out_folder){
+  #this wrapper runs dorado on a pod5 file
+  #then runs sturgeon on a selected barcode
+  #iteration = 3
+  #bcoverride = 1
+  #main_folder = "~/nanocns/data/guppytest"
+  #system(paste0("mkdir ", main_folder))
+  #fast5 = "/var/lib/minknow/data/AMC_run_1/no_sample/20230320_1146_MN40017_FAV81912_63a68867/fast5/FAV81912_63a68867_c5a6d74a_2.fast5"
+  
+  system(paste0("mkdir ",out_folder))
+  
+  #out_folder="~/nanocns/data/pod5_iteration/"
+  
+  dorado_command=paste0("~/nanocns/dorado/dorado-0.3.2-linux-x64/bin/dorado basecaller ~/nanocns/models/dna_r10.4.1_e8.2_400bps_hac@v4.2.0 ", pod5_folder,
+                        " --reference /home/sturgeon/nanocns/data/chm13_V2/chm13v2.0.fa --modified-bases 5mCG_5hmCG > ", out_folder,"/mapped.bam")
+  print("running dorado")
+  system(dorado_command)
+  
+  system(paste0("samtools sort -@ 10 ", out_folder, "/mapped.bam -o ",out_folder, "/mapped_srt.bam"))
+  system(paste0("samtools index ", out_folder, "/mapped_srt.bam"))
+  system(paste0("rm ",out_folder, "/mapped.bam"))
+  out=plot_cnv_from_bam_DNAcopy(paste0(out_folder,"/mapped_srt.bam"))
+  
+}
+
