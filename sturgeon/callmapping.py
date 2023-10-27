@@ -272,7 +272,7 @@ def bam_path_to_bed(
     pos_threshold: Optional[float] = 0.7,
 ):
 
-    probes_df = read_probes_file(probes_df)
+    probes_df = read_probes_file(probes_file)
 
     output_files = list()
 
