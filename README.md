@@ -97,7 +97,7 @@ Convert input files (bam or txt) to bed files that can be used as input to predi
 
 It is critical that the data is correctly aligned to a reference genome, otherwise the results will be wrong. We have used the Telomere-to-telomere reference genome (CHM13v2) for all of our work, and it is the default setting for this program. We encourage you to also use it, as we have not thoroughly tested other reference genomes. If you have aligned your data to `hg38`, we encourage you to re-align (or "lift it" with [CrossMap](https://crossmap.sourceforge.net/#)) it to the T2T reference genome. If you still prefer to use `hg38`, then you can pass `--reference-genome hg38` to use the correct probe coordinates. The `hg38` coordinates have been generated via liftover, this lead to the loss of 26 out of 427680 probes.
 
-### Extract modification calls (modkit)
+### Extract modification calls: modkit (recommended)
 
 If you have bam files that contain modifications basecalled with Guppy or Dorado, this is the recommended option. You will have to install [modkit](https://github.com/nanoporetech/modkit), the official ONT tool to extract modifications. Once installed, given a bam file you should do the following:
 
@@ -120,7 +120,9 @@ sturgeon inputtobed -i MODKIT_OUTPUT_DIR -o OUTPUT_DIR -s modkit
 Please note that Sturgeon will only use 5mC scores, other modification scores will be filtered out.
 Please refer to the [modkit wiki](https://nanoporetech.github.io/modkit/quick_start.html) in case these commands change.
 
-### Alignment bam files (Guppy)
+### Alignment bam files: guppy (not recommended)
+
+Please strongly consider using [modkit](https://github.com/nanoporetech/modkit), to extract methylation calls from bam files from guppy we rely on [modbampy](https://github.com/epi2me-labs/modbam2bed/tree/master), which is currently deprecated. Updates to guppy might break modbampy compatibility and could give WRONG results.
 
 Convert a bam that contains methylation calls into the adequate format (.bed) so that it can be used for prediction.
 
@@ -149,7 +151,9 @@ sturgeon inputtobed -i demo/bam/example_2.bam -o demo/bam/out_2 -s guppy
 sturgeon inputtobed -i demo/bam/example_3.bam -o demo/bam/out_3 -s guppy
 ```
 
-### Per read methylation txt files (Megalodon)
+### Per read methylation txt files: megalodon (not recommended)
+
+Please strongly consider using [modkit](https://github.com/nanoporetech/modkit), to extract methylation calls since megalodon is deprecated by ONT.
 
 Convert a txt file that contains per read methylation calls into the adequate format (.bed) so that it can be used for prediction.
 

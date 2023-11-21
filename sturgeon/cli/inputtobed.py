@@ -1,6 +1,7 @@
 import os
 from typing import Optional, List
 import logging
+import warnings
 
 from sturgeon.callmapping import (
     bam_path_to_bed, 
@@ -68,6 +69,12 @@ def filetobed(
 
     if source == 'guppy':
 
+        warnings.warn(
+        '''\nUsing this source is NOT recommended.\n
+        Please strongly consider using modkit (https://github.com/nanoporetech/modkit/), to extract methylation calls from bam files.\n 
+        Otherwise we rely on modbampy, which is currently deprecated. Updates to guppy might break modbampy compatibility and could give WRONG results.                   
+        ''')
+
         bamtobed(
             input_path = input_path,
             output_path = output_path,
@@ -78,6 +85,12 @@ def filetobed(
         )
     
     elif source == 'megalodon':
+
+        warnings.warn(
+        '''\nUsing this source is NOT recommended.\n
+        Please strongly consider using modkit (https://github.com/nanoporetech/modkit/), to extract methylation calls.\n 
+        Megalodon is deprecated on ONT's end.                   
+        ''')
 
         megatobed(
             input_path = input_path,
