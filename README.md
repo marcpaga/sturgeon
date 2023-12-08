@@ -52,7 +52,7 @@ The following models are available:
 
 ### `General`
 
-- This model contains the same classification scheme as [Capper et al., 2018](https://doi.org/10.1038/nature26000). This means that there are a total of 91 classes (9 control and 82 tumor classes). 
+- This model contains a similar classification scheme (some classes are merged, see below) as [Capper et al., 2018](https://doi.org/10.1038/nature26000). This means that there are a total of 87 classes (9 control and 78 tumor classes). 
 - We recommend to always use this model in parallel, even when using other models.
 - Score recommendations:
     
@@ -61,6 +61,15 @@ The following models are available:
     - `score >= 0.95`: high confident result that the class is correct.
 
 Download link: https://www.dropbox.com/s/yzca4exl40x9ukw/general.zip?dl=0
+
+Merged classes (these are merged since the subtype differences are based on tumour location or age):
+
+- Embryonal - MB SHH - CHL AD INF merges: "Embryonal - MB SHH - CHL AD" and "Embryonal - MB SHH - INF"
+
+- Ependymal - SUBEPN - ALL merges: "Ependymal - SUBEPN - PF", "Ependymal - SUBEPN - SPINE" and "Ependymal - SUBEPN - ST"
+
+- Other glioma - LGG PA - PA merges: "Other glioma - LGG PA - PA MID" and "Other glioma - LGG PA - PA PF"
+
 
 ### `Brainstem`
 
