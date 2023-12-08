@@ -110,13 +110,13 @@ It is critical that the data is correctly aligned to a reference genome, otherwi
 
 If you have bam files that contain modifications basecalled with Guppy or Dorado, this is the recommended option. You will have to install [modkit](https://github.com/nanoporetech/modkit), the official ONT tool to extract modifications. Once installed, given a bam file you should do the following:
 
-If, besides 5mC you also have 5hmC modification calls, you should add them up via:
+1. (optional) If, besides 5mC you also have 5hmC modification calls, you should add them up via:
 ```
 modkit adjust-mods --convert h m INPUT.bam OUTPUT.bam
 ```
 The reasoning behind this is that both 5mC and 5hmC poorly react to bisulfite treatment [Huang et al., 2010](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2811190/), therefore 5hmC sites would appear as 5mC in a methylation microarray experiment. We trained on those kind of experiments, we therefore think that adding the two scores up reflects the most the training data. 
 
-You can then extract the 5mC scores using:
+2. You can then extract the 5mC scores using:
 ```
 modkit extract OUTPUT.bam OUTPUT.txt
 ```
