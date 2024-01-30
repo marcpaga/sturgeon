@@ -3,24 +3,32 @@
 library(QDNAseq)
 library(DNAcopy)
 #required files
-#sturgeon rscripts dir
-rscriptsdir = "c:/Users/sturgeon/Desktop/sturgeon/R_scripts/"
 
+##windows format paths
+#sturgeon rscripts dir, windows format
+rscriptsdir = "c:/Users/sturgeon/Desktop/sturgeon/R_scripts/"
 
 #rds file containing a colorlist 
 
 color_translation = readRDS(paste0(rscriptsdir, "/color_translation.rds"))
+#this is a temporary file used for plotting the cnv plots, it will be generated and deleted, 
+#you only have to make sure the location is accessible
 cnvplot_tmpfile = paste0(rscriptsdir, "/bins_sample_counts_tmp.bed")
+#this is the reference file used for plotting the cnv plots
 cnvplot_reffile = paste0(rscriptsdir, "/bins_export.bed")
-sturgeon_shell = "/mnt/c/Users/sturgeon/Desktop/sturgeon/R_scripts/run_sturgeon_windows.sh"
 
 #DNAcopy bins
 bins=readRDS(paste0(rscriptsdir, "/chm13_v2.0_bins.rds"))
 relevant_genes_cnvplot = paste0(rscriptsdir, "/relevant_genes_with_chm13v2_1Mb_bin_nrs.bed")
 
+#linux formats
 #point to the samtools location as reconised within the wsl (so leading with /mnt/)
-samtools_location = "/mnt/c/Users/sturgeon/Desktop/sturgeon_files/samtools/samtools-1.19.2/samtools"                                
-                                
+samtools_location = "/mnt/c/Users/sturgeon/Desktop/sturgeon_files/samtools/samtools-1.19.2/samtools" 
+#make sure the access rights are set for this sh script
+sturgeon_shell = "/mnt/c/Users/sturgeon/Desktop/sturgeon/R_scripts/run_sturgeon_windows.sh"                                
+
+
+#below this everything should work without changes
 
 #fix weird errors popping up from the color translation
 color_translation_frame = data.frame(names = names(color_translation), color_translation)
