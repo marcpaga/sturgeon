@@ -2,10 +2,10 @@
 
 source("c:/Users/sturgeon/Desktop/sturgeon/R_scripts/peroperative_seq_functions_windows.R")
 
-
+#make sure the probes file corresponds to the refgenome used by minknow, and that linux format path is used
 probes_file = "/mnt/c/Users/sturgeon/Desktop/sturgeon/R_scripts/probelocs_chm13.bed"
 model_file = "/mnt/c/Users/sturgeon/Desktop/sturgeon_files/model.zip"
-#make sure the access rights are set for this sh script
+
 
 print("loaded")
 
@@ -123,8 +123,3 @@ while(running == T){
   }}
 
 
-
-#end sturgeon
-system("pkill -f sturgeon")
-
-plot_cnv_from_live_dir_DNAcopy(main_folder)
