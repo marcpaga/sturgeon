@@ -476,7 +476,7 @@ def live_megalodon(
                     )
                     continue
 
-                inference_session, array_probes_df, decoding_dict, temperatures, weight_matrix, merge_dict = load_model(model)    
+                inference_session, array_probes_df, decoding_dict, temperatures, merge_dict = load_model(model)    
 
                 logging.info("Starting prediction")
                 prediction_df = predict_sample(
@@ -485,7 +485,6 @@ def live_megalodon(
                     decoding_dict = deepcopy(decoding_dict),
                     probes_df = array_probes_df,
                     weight_matrix = weight_matrix,
-                    temperatures = temperatures,
                     merge_dict = merge_dict,
                 )
                 prediction_df['timestamp'] = timestamp
