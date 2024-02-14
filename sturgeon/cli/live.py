@@ -36,6 +36,7 @@ def live(
     model_files: List[str],
     source: str,
     probes_file: str,
+    reference_genome: str,
     margin: int,
     neg_threshold: float,
     pos_threshold: float,
@@ -52,6 +53,13 @@ def live(
 
     if not os.path.exists(output_path):
         os.makedirs(output_path)
+
+    if reference_genome is not None:
+        probes_file = os.path.join(
+            os.path.dirname(__file__), 
+            '../include/static', 
+            'probes_{}.bed'.format(reference_genome)
+        )
 
     if source == 'guppy':
 
