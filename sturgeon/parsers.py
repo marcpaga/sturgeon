@@ -104,7 +104,7 @@ def register_live(parser):
         '--probes-file',
         type = str,
         default = os.path.join(
-            os.path.dirname(__file__), 'include/static', 'probes.bed'
+            os.path.dirname(__file__), 'include/static', 'probes_chm13v2.bed'
         ),
         help = 'Bed file with probe names and genomic locations'
     )
