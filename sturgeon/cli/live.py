@@ -484,7 +484,7 @@ def live_megalodon(
                     bed_file = bed_output_file,
                     decoding_dict = deepcopy(decoding_dict),
                     probes_df = array_probes_df,
-                    weight_matrix = weight_matrix,
+                    temperatures = temperatures,
                     merge_dict = merge_dict,
                 )
                 prediction_df['timestamp'] = timestamp
