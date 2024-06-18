@@ -76,6 +76,9 @@ demo/mega/out_live
 demo/tmp
 demo/bed/out
 demo/modkit
+demo/modkit_pileup
+demo/modkit_extract
+demo/bam
 
 main.build
 main.dist

@@ -129,6 +129,15 @@ sturgeon inputtobed -i MODKIT_OUTPUT_DIR -o OUTPUT_DIR -s modkit
 Please note that Sturgeon will only use 5mC scores, other modification scores will be filtered out.
 Please refer to the [modkit wiki](https://nanoporetech.github.io/modkit/quick_start.html) in case these commands change.
 
+### Extract modification calls: modkit pileup
+
+Similarly to `modkit extract`, you can use pileup to extract the modification calls into a single file with all the genomic positions, instead of modification calls per read.
+
+In that case use the following command:
+```
+sturgeon inputtobed -i MODKIT_PILEUP_FILE -o OUTPUT_FILE -s modkit_pileup
+```
+
 ### Alignment bam files: guppy (not recommended)
 
 Please strongly consider using [modkit](https://github.com/nanoporetech/modkit), to extract methylation calls from bam files from guppy we rely on [modbampy](https://github.com/epi2me-labs/modbam2bed/tree/master), which is currently deprecated. Updates to guppy might break modbampy compatibility and could give WRONG results.

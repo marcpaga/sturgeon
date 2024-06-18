@@ -7,9 +7,14 @@ from sturgeon.callmapping import (
     bam_path_to_bed, 
     mega_path_to_bed, 
     modkit_path_to_bed,
+    modkit_pileup_file_to_bed
 )
 from sturgeon.utils import validate_megalodon_file, validate_modkit_file
-import pysam
+
+try:
+    import pysam
+except ImportError:
+    warnings.warn('Error loading modbampy, bam functionalities will not work')
 
 def filetobed(
     input_path: List[str],
@@ -103,7 +108,22 @@ def filetobed(
 
     elif source == 'modkit':
         
-        modkittobed(
+        modkittobed_extract(
+            input_path = input_path,
+            output_path = output_path,
+            probes_file = probes_file,
+            margin = margin,
+            neg_threshold = neg_threshold,
+            pos_threshold = pos_threshold,
+            fivemc_code = fivemc_code,
+        )
+
+    elif source == 'modkit_pileup':
+
+        if os.path.exists(output_path):
+            os.removedirs(output_path)
+
+        modkittobed_pileup(
             input_path = input_path,
             output_path = output_path,
             probes_file = probes_file,
@@ -228,7 +248,7 @@ def megatobed(
         pos_threshold = pos_threshold,
     )
 
-def modkittobed(
+def modkittobed_extract(
     input_path: List[str],
     output_path: str,
     probes_file: str,
@@ -238,7 +258,7 @@ def modkittobed(
     fivemc_code: str = 'm',
 ):
     
-    logging.info("Modkit to bed program")
+    logging.info("Modkit extract to bed program")
 
     txt_files = list()
     if os.path.isfile(input_path):
@@ -274,6 +294,38 @@ def modkittobed(
     modkit_path_to_bed(
         input_path = modkit_files,
         output_path = output_path,
+        probes_file = probes_file,
+        margin = margin,
+        neg_threshold = neg_threshold,
+        pos_threshold = pos_threshold,
+        fivemc_code = fivemc_code,
+    )
+
+
+def modkittobed_pileup(
+    input_path: str,
+    output_path: str,
+    probes_file: str,
+    margin: Optional[int] = 25,
+    neg_threshold: Optional[float] = 0.3,
+    pos_threshold: Optional[float] = 0.7,
+    fivemc_code: str = 'm',
+):
+    
+    logging.info("Modkit pileup to bed program")
+    if not os.path.isfile(input_path):
+        err_msg = '''
+        --input-path must be file, given: {}
+        '''.format(input_path)
+        logging.error(err_msg)
+        raise ValueError(err_msg)
+
+    logging.info("Input modkit file: {}".format(input_path))
+    logging.info("Output will be saved in: {}".format(output_path))
+
+    modkit_pileup_file_to_bed(
+        input_file = input_path,
+        output_file = output_path,
         probes_file = probes_file,
         margin = margin,
         neg_threshold = neg_threshold,

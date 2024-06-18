@@ -207,7 +207,7 @@ def register_inputtobed(parser):
         '-s', '--source',
         type = str,
         required = True,
-        choices = ['guppy', 'megalodon', 'modkit'],
+        choices = ['guppy', 'megalodon', 'modkit', 'modkit_pileup'],
         help='Output file format'
     )
 

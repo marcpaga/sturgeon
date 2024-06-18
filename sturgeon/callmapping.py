@@ -624,3 +624,124 @@ def modkit_path_to_bed(
     )
 
         
+def modkit_pileup_file_to_bed(
+    input_file: str,
+    output_file: str,
+    probes_file: str,
+    margin: Optional[int] = 25,
+    neg_threshold: Optional[float] = 0.3,
+    pos_threshold: Optional[float] = 0.7,
+    fivemc_code:str = 'm',
+) -> pd.DataFrame:
+
+    column_names = [
+        "chrom",
+        "chromStart",
+        "chromEnd",
+        "mod_code",
+        "score_bed",
+        "strand",
+        "thickStart",
+        "thickEnd",
+        "color",
+        "valid_cov",
+        "percent_modified",
+        "n_mod",
+        "n_canonical",
+        "n_othermod",
+        "n_delete",
+        "n_fail",
+        "n_diff",
+        'n_nocall'
+    ]
+    modkit_df = pd.read_csv(
+        input_file, 
+        sep = '\t', 
+        header = None, 
+        index_col = None, 
+    )
+
+    assert modkit_df.shape[1] == len(column_names), 'Invalid modkit pileup file, number of columns does not match'
+    modkit_df.columns = column_names
+
+    modkit_df = modkit_df[modkit_df['mod_code'] == fivemc_code]
+    
+    modkit_df = modkit_df.rename(columns={
+        'chrom': 'chr',
+        'chromStart': 'reference_pos',
+        'percent_modified': 'score'
+    })
+    modkit_df['score'] /= 100
+    
+    modkit_df = modkit_df.drop(columns=[
+        'mod_code',
+        'thickStart',
+        'thickEnd',
+        'color',
+        'valid_cov',
+        'n_mod',
+        "n_canonical",
+        "n_othermod",
+        "n_delete",
+        "n_fail",
+        "n_diff",
+        'n_nocall'
+    ])
+    modkit_df = modkit_df[modkit_df['reference_pos'] != -1]
+    modkit_df = modkit_df[modkit_df['chr'] != '.']
+
+    probes_df = read_probes_file(probes_file)
+
+    probes_methyl_df = deepcopy(probes_df)
+    logging.info('Processing modkit file: {}'.format(input_file))
+
+    chromosomes = np.unique(probes_df['chr'])
+
+    probes_methyl_df['methylation_calls'] = 0
+    probes_methyl_df['unmethylation_calls'] = 0
+    probes_methyl_df['total_calls'] = 0
+
+    calls_per_probe = list()
+    for chrom in chromosomes:
+
+        calls_per_probe_chr =  map_methyl_calls_to_probes_chr(
+            probes_df =  probes_methyl_df[probes_methyl_df['chr'] == chrom.item()],
+            methyl_calls_per_read = modkit_df[modkit_df['chr'] == 'chr'+str(chrom.item())],
+            margin = margin, 
+            neg_threshold = neg_threshold,
+            pos_threshold = pos_threshold,
+        )
+        calls_per_probe.append(calls_per_probe_chr)
+
+        calls = calls_per_probe_chr['total_calls'].sum()
+        logging.debug(
+            '''
+            Found a total of {} methylation array sites on chromosome {}
+            '''.format(calls, chrom)
+        )
+
+    calls_per_probe = pd.concat(calls_per_probe)
+
+    calls_per_probe.to_csv(
+        output_file+'.tmp', header = True, index = False, sep = '\t'
+    )
+
+    calls_per_probe = calls_per_probe.rename(columns={
+        'chr': 'chrom',
+        'start': 'chromStart',
+        'end': 'chromEnd',
+        'ID_REF': 'probe_id',
+        'methylation_calls': 'methylation_call'
+    })
+
+    calls_per_probe = calls_per_probe[calls_per_probe['total_calls'] > 0]
+    calls_per_probe = calls_per_probe[
+        ['chrom', 'chromStart', 'chromEnd', 'methylation_call', 'probe_id']
+    ]
+
+    calls_per_probe.to_csv(
+        output_file, header = True, index = False, sep = '\t'
+    )
+
+
+    
