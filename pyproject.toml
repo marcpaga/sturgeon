@@ -1,16 +1,11 @@
 [build-system]
-requires = [
-    "hatchling",
-]
-build-backend="hatchling.build"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "sturgeon"
-version = "0.5.0"
-authors = [
-    { name="Marc Pagès-Gallego" },
-    { name="Carlo Vermeulen" },
-]
+version = "0.5.1"
+authors = [{ name = "Marc Pagès-Gallego" }, { name = "Carlo Vermeulen" }]
 description = "CNS classifier"
 readme = "README.md"
 requires-python = ">=3.7, <3.10"
@@ -32,4 +27,3 @@ sturgeon = "sturgeon.main:run"
 
 [options.package_data]
 sturgeon = "include/*"
-

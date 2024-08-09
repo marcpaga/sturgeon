@@ -21,8 +21,8 @@ def SuppressPandasWarning():
         yield
 
 
-def get_methyl_calls_per_read( 
-    bam_file: str, 
+def get_methyl_calls_per_read(
+    bam_file: str,
     chromosome: str,
 ) -> pd.DataFrame:
     """Get the methylation status of probes from a guppy methylation bam file
@@ -49,14 +49,14 @@ def get_methyl_calls_per_read(
 
     if not chromosome.startswith('chr'):
         chromosome = 'chr'+str(chromosome)
-    
+
     with ModBam(bam_file) as bam:
 
         st = 0
         nd = 250000000
 
         for read in bam.reads(chromosome, st, nd):
-            
+
             for pos_mod in read.mod_sites:
                 read_id, reference_pos, _, strand, _, _, _, score = pos_mod
 
@@ -77,7 +77,7 @@ def get_methyl_calls_per_read(
 def map_methyl_calls_to_probes_chr(
     probes_df: pd.DataFrame,
     methyl_calls_per_read: pd.DataFrame,
-    margin: int, 
+    margin: int,
     neg_threshold: float,
     pos_threshold: float,
 ) -> pd.DataFrame:
@@ -116,9 +116,9 @@ def map_methyl_calls_to_probes_chr(
             bin_scores = bin_scores[bin_scores != 0]
             if len(bin_scores) == 0:
                 continue
-            
+
             final_score = int(np.median(bin_scores))
-            
+
             if final_score == 1:
                 probes_df.loc[ff, 'methylation_calls'] += 1
             elif final_score == -1:
@@ -134,7 +134,7 @@ def merge_probes_methyl_calls(
     file_list: List[str],
     output_file: str,
 ) -> pd.DataFrame:
-    """Merge a list of methylation calls into a single one by adding all 
+    """Merge a list of methylation calls into a single one by adding all
     calls accross files
 
     Args:
@@ -173,10 +173,10 @@ def probes_methyl_calls_to_bed(
 ) -> pd.DataFrame:
 
     bed_df = {
-        "chrom": list(), 
-        "chromStart": list(), 
-        "chromEnd": list(), 
-        "methylation_call": list(), 
+        "chrom": list(),
+        "chromStart": list(),
+        "chromEnd": list(),
+        "methylation_call": list(),
         "probe_id": list(),
     }
 
@@ -205,7 +205,7 @@ def probes_methyl_calls_to_bed(
         bed_df['probe_id'].append(row.ID_REF)
 
     bed_df = pd.DataFrame(bed_df)
-    
+
     logging.info('Total measured array CpG sites: {}'.format(bed_df.shape[0]))
     logging.info('Saving bed file to: {}'.format(output_file))
     bed_df.to_csv(
@@ -243,7 +243,7 @@ def bam_to_calls(
         calls_per_probe_df = map_methyl_calls_to_probes_chr(
             probes_df = probes_df[probes_df['chr'] == chrom.item()],
             methyl_calls_per_read = calls_per_read_df,
-            margin = margin, 
+            margin = margin,
             neg_threshold = neg_threshold,
             pos_threshold = pos_threshold,
         )
@@ -257,7 +257,7 @@ def bam_to_calls(
         )
         calls_per_probe.append(calls_per_probe_df)
         calls_per_read.append(calls_per_read_df)
-            
+
     calls_per_probe = pd.concat(calls_per_probe)
     calls_per_read = pd.concat(calls_per_read)
 
@@ -283,7 +283,7 @@ def bam_path_to_bed(
             Getting methylation calls from: {}
             '''.format(bam_file)
         )
-        
+
         bam_name = Path(bam_file).stem
 
         output_file = os.path.join(
@@ -323,11 +323,11 @@ def bam_path_to_bed(
         )
 
     merged_output_file = os.path.join(
-        output_path, 
+        output_path,
         'merged_probes_methyl_calls.txt'
     )
     merge_probes_methyl_calls(
-        output_files, 
+        output_files,
         merged_output_file
     )
 
@@ -364,13 +364,13 @@ def mega_file_to_bed(
         sep = '\t',
     )
     mega_calls = mega_calls.rename(columns = {
-        'chrm':'chr', 
+        'chrm':'chr',
         'pos': 'reference_pos',
     })
     mega_calls['score'] = np.exp(mega_calls['mod_log_prob'])
     mega_calls = mega_calls.drop(columns = [
-        'mod_log_prob', 
-        'can_log_prob', 
+        'mod_log_prob',
+        'can_log_prob',
         'mod_base',
     ])
 
@@ -389,7 +389,7 @@ def mega_file_to_bed(
         calls_per_probe_chr =  map_methyl_calls_to_probes_chr(
             probes_df =  probes_methyl_df[probes_methyl_df['chr'] == chrom.item()],
             methyl_calls_per_read = mega_calls[mega_calls['chr'] == 'chr'+str(chrom.item())],
-            margin = margin, 
+            margin = margin,
             neg_threshold = neg_threshold,
             pos_threshold = pos_threshold,
         )
@@ -415,7 +415,7 @@ def mega_path_to_bed(
     pos_threshold: Optional[float] = 0.7,
 ):
 
-    
+
     output_files = list()
     for mega_file in input_path:
 
@@ -424,7 +424,7 @@ def mega_path_to_bed(
             Found methylation megalodon file: {}
             '''.format(mega_file)
         )
-        
+
         mega_name = Path(mega_file).stem
 
         output_file = os.path.join(
@@ -454,11 +454,11 @@ def mega_path_to_bed(
         )
 
     merged_output_file = os.path.join(
-        output_path, 
+        output_path,
         'merged_probes_methyl_calls.txt'
     )
     merge_probes_methyl_calls(
-        output_files, 
+        output_files,
         merged_output_file
     )
 
@@ -480,9 +480,9 @@ def modkit_file_to_bed(
     pos_threshold: Optional[float] = 0.7,
     fivemc_code:str = 'm',
 ) -> pd.DataFrame:
-    
+
     mandatory_columns = [
-        "read_id", 
+        "read_id",
         "chrom",
         "ref_position",
         "mod_qual",
@@ -491,10 +491,10 @@ def modkit_file_to_bed(
         "modified_primary_base",
     ]
     modkit_df = pd.read_csv(
-        input_file, 
-        sep = '\t', 
-        header = 0, 
-        index_col = None, 
+        input_file,
+        sep = '\t',
+        header = 0,
+        index_col = None,
         usecols= mandatory_columns
     )
 
@@ -532,7 +532,7 @@ def modkit_file_to_bed(
         calls_per_probe_chr =  map_methyl_calls_to_probes_chr(
             probes_df =  probes_methyl_df[probes_methyl_df['chr'] == chrom.item()],
             methyl_calls_per_read = modkit_df[modkit_df['chr'] == 'chr'+str(chrom.item())],
-            margin = margin, 
+            margin = margin,
             neg_threshold = neg_threshold,
             pos_threshold = pos_threshold,
         )
@@ -558,7 +558,7 @@ def modkit_path_to_bed(
     pos_threshold: Optional[float] = 0.7,
     fivemc_code:str = 'c',
 ):
-    
+
     output_files = list()
     for modkit_file in input_path:
 
@@ -567,7 +567,7 @@ def modkit_path_to_bed(
             Found methylation modkit file: {}
             '''.format(modkit_file)
         )
-        
+
         modkit_name = Path(modkit_file).stem
 
         output_file = os.path.join(
@@ -606,11 +606,11 @@ def modkit_path_to_bed(
         )
 
     merged_output_file = os.path.join(
-        output_path, 
+        output_path,
         'merged_probes_methyl_calls.txt'
     )
     merge_probes_methyl_calls(
-        output_files, 
+        output_files,
         merged_output_file
     )
 
@@ -623,7 +623,7 @@ def modkit_path_to_bed(
         bed_output_file
     )
 
-        
+
 def modkit_pileup_file_to_bed(
     input_file: str,
     output_file: str,
@@ -655,24 +655,31 @@ def modkit_pileup_file_to_bed(
         'n_nocall'
     ]
     modkit_df = pd.read_csv(
-        input_file, 
-        sep = '\t', 
-        header = None, 
-        index_col = None, 
+        input_file,
+        delim_whitespace = True,
+        header = None,
+        index_col = None,
     )
 
-    assert modkit_df.shape[1] == len(column_names), 'Invalid modkit pileup file, number of columns does not match'
-    modkit_df.columns = column_names
+    try:
+        assert modkit_df.shape[1] == len(column_names)
+    except AssertionError:
+        err_msg = """
+        Invalid modkit pileup file, number of columns does not match, expected {}, got {}.
+        """.format(len(column_names), modkit_df.shape[1])
 
+        raise AssertionError(err_msg)
+
+    modkit_df.columns = column_names
     modkit_df = modkit_df[modkit_df['mod_code'] == fivemc_code]
-    
+
     modkit_df = modkit_df.rename(columns={
         'chrom': 'chr',
         'chromStart': 'reference_pos',
         'percent_modified': 'score'
     })
     modkit_df['score'] /= 100
-    
+
     modkit_df = modkit_df.drop(columns=[
         'mod_code',
         'thickStart',
@@ -707,7 +714,7 @@ def modkit_pileup_file_to_bed(
         calls_per_probe_chr =  map_methyl_calls_to_probes_chr(
             probes_df =  probes_methyl_df[probes_methyl_df['chr'] == chrom.item()],
             methyl_calls_per_read = modkit_df[modkit_df['chr'] == 'chr'+str(chrom.item())],
-            margin = margin, 
+            margin = margin,
             neg_threshold = neg_threshold,
             pos_threshold = pos_threshold,
         )
@@ -742,6 +749,3 @@ def modkit_pileup_file_to_bed(
     calls_per_probe.to_csv(
         output_file, header = True, index = False, sep = '\t'
     )
-
-
-    
