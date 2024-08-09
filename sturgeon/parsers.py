@@ -58,8 +58,8 @@ def register_live(parser):
     subparser = parser.add_parser(
         'live',
         description = '''
-        Run a process that watches over a directory and predicts as the samples 
-        are written into it. It assumes that each file written in the folder 
+        Run a process that watches over a directory and predicts as the samples
+        are written into it. It assumes that each file written in the folder
         comes from the same sample and are of a later timepoint.
         This program never ends, as it keeps watching the input folder for new
         files, therefore this has to be terminated manually.''',
@@ -96,7 +96,7 @@ def register_live(parser):
         choices = ['guppy', 'megalodon'],
         help = '''
         Which software was used to output the input files.
-        'guppy' for alignment files (.bam). 
+        'guppy' for alignment files (.bam).
         'megalodon' for per read methylation calls (.txt)
         '''
     )
@@ -132,7 +132,7 @@ def register_live(parser):
         '--neg-threshold',
         type = float,
         default = 0.3,
-        help='''Positions with scores below this threshold will be considered 
+        help='''Positions with scores below this threshold will be considered
         non-methylated'''
     )
     subparser.add_argument(
@@ -158,6 +158,11 @@ def register_live(parser):
     subparser.set_defaults(func=run_live)
 
 def run_live(args):
+
+    error_msg = """
+    The live functionality is no longer supported since modbampy has been deprecated by ONT. If you need live functionality its best to develop your own scripts that check for new bam files and call the appropiate following commands.
+    """
+    raise RuntimeError(error_msg)
 
     from sturgeon.cli import live
 
@@ -245,7 +250,7 @@ def register_inputtobed(parser):
         type = float,
         default = 0.3,
         help='''
-        Positions with scores below this threshold will be considered 
+        Positions with scores below this threshold will be considered
         non-methylated'''
     )
     subparser.add_argument(

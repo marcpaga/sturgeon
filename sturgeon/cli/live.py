@@ -10,18 +10,23 @@ import json
 
 import numpy as np
 import pandas as pd
-import pysam
+
+# TODO: remove this at some point since it is only needed for live functionality
+try:
+    import pysam
+except ImportError:
+    pass
 
 from sturgeon.callmapping import (
-    bam_to_calls, 
+    bam_to_calls,
     merge_probes_methyl_calls,
     probes_methyl_calls_to_bed,
     mega_file_to_bed,
 )
 from sturgeon.utils import (
-    validate_model_file, 
-    get_model_path, 
-    creation_date, 
+    validate_model_file,
+    get_model_path,
+    creation_date,
     validate_megalodon_file,
 )
 
@@ -56,15 +61,15 @@ def live(
 
     if reference_genome is not None:
         probes_file = os.path.join(
-            os.path.dirname(__file__), 
-            '../include/static', 
+            os.path.dirname(__file__),
+            '../include/static',
             'probes_{}.bed'.format(reference_genome)
         )
 
     if source == 'guppy':
 
         probes_df = read_probes_file(probes_file)
-        
+
         live_guppy(
             input_path = input_path,
             output_path = output_path,
@@ -135,7 +140,7 @@ def live_guppy(
         available_bam_timestamps = available_bam_timestamps[creation_order]
 
         for file_path, timestamp in zip(available_bam_files, available_bam_timestamps):
-            
+
             # check if we have processed this bam file already
             file_name = Path(file_path).stem
             try:
@@ -144,7 +149,7 @@ def live_guppy(
                 continue
             except KeyError:
                 logging.info('New bam file found: {}'.format(file_path))
-                
+
             # generate index file if not existing
             bai_file = file_path + '.bai'
             if not os.path.exists(bai_file):
@@ -165,7 +170,7 @@ def live_guppy(
                 except pysam.utils.SamtoolsError:
                     logging.warning(
                         '''
-                        Making index file failed, bam file might not be 
+                        Making index file failed, bam file might not be
                         complete yet, will try again later
                         '''
                     )
@@ -180,15 +185,15 @@ def live_guppy(
             # extract methylation calls from the bam file
             logging.info('Getting methylation calls from file')
             calls_per_probe_file = os.path.join(
-                output_path, 
+                output_path,
                 file_name + '_probes_methyl_calls.txt',
             )
             calls_per_read_file = os.path.join(
-                output_path, 
+                output_path,
                 file_name + '_read_methyl_calls.txt'
             )
             if not os.path.isfile(calls_per_probe_file) or not os.path.isfile(calls_per_read_file):
-                
+
                 probes_methyl_df = deepcopy(probes_df)
                 calls_per_probe, calls_per_read = bam_to_calls(
                     bam_file = file_path,
@@ -202,12 +207,12 @@ def live_guppy(
                     header = True, index = False, sep = '\t'
                 )
                 calls_per_read.to_csv(
-                    calls_per_read_file, 
+                    calls_per_read_file,
                     header = True, index = False, sep = '\t'
                 )
 
             merged_output_file = os.path.join(
-                output_path, 
+                output_path,
                 'merged_probes_methyl_calls_{}.txt'.format(len(bam_files))
             )
 
@@ -220,10 +225,10 @@ def live_guppy(
                     [
                         calls_per_probe_file,
                         os.path.join(
-                            output_path, 
+                            output_path,
                             'merged_probes_methyl_calls_{}.txt'.format(len(bam_files)-1)
                         )
-                    ], 
+                    ],
                     merged_output_file
                 )
 
@@ -258,7 +263,7 @@ def live_guppy(
                     )
                     continue
 
-                inference_session, array_probes_df, decoding_dict, temperatures, merge_dict = load_model(model)    
+                inference_session, array_probes_df, decoding_dict, temperatures, merge_dict = load_model(model)
 
                 logging.info("Starting prediction")
                 prediction_df = predict_sample(
@@ -272,7 +277,7 @@ def live_guppy(
                 prediction_df['timestamp'] = timestamp
 
                 output_csv = os.path.join(
-                    output_path, 
+                    output_path,
                     'predictions_{}.csv'.format(Path(model).stem)
                 )
                 prediction_df.to_csv(
@@ -286,7 +291,7 @@ def live_guppy(
 
                     # plot the last prediction
                     output_pdf = os.path.join(
-                        output_path, 
+                        output_path,
                         'predictions_{}_{}.pdf'.format(
                             len(bam_files)-1,
                             Path(model).stem,
@@ -301,7 +306,7 @@ def live_guppy(
                         except FileNotFoundError:
                             logging.debug("No colors dict in zip file")
                             color_dict = None
-                    
+
                     plot_prediction(
                         prediction_df = prediction_df,
                         color_dict = color_dict,
@@ -309,7 +314,7 @@ def live_guppy(
                     )
 
                     output_pdf = os.path.join(
-                        output_path, 
+                        output_path,
                         'predictions_overtime_{}.pdf'.format(
                             Path(model).stem,
                         )
@@ -351,7 +356,7 @@ def live_megalodon(
     # keep track of processed bam files
     meg_files = dict()
     logging.info('Starting live prediction from megalodon output files')
-    
+
     while True:
 
         logging.info(
@@ -370,7 +375,7 @@ def live_megalodon(
             f = os.path.join(input_path, file)
 
             success, msg = validate_megalodon_file(f)
-                
+
             if not success:
                 logging.info(
                     '''
@@ -391,7 +396,7 @@ def live_megalodon(
         available_meg_timestamps = available_meg_timestamps[creation_order]
 
         for file_path, timestamp in zip(available_meg_files, available_meg_timestamps):
-            
+
             # check if we have processed this bam file already
             file_name = Path(file_path).stem
             try:
@@ -400,17 +405,17 @@ def live_megalodon(
                 continue
             except KeyError:
                 logging.info('New megalodon file found: {}'.format(file_path))
-                
+
 
             # extract methylation calls from the bam file
             logging.info('Getting methylation calls from file')
             calls_per_probe_file = os.path.join(
-                output_path, 
+                output_path,
                 file_name + '_probes_methyl_calls.txt',
             )
 
             if not os.path.isfile(calls_per_probe_file):
-                
+
                 calls_per_probe = mega_file_to_bed(
                     input_file = file_path,
                     probes_file = probes_file,
@@ -425,7 +430,7 @@ def live_megalodon(
 
 
             merged_output_file = os.path.join(
-                output_path, 
+                output_path,
                 'merged_probes_methyl_calls_{}.txt'.format(len(meg_files))
             )
 
@@ -438,10 +443,10 @@ def live_megalodon(
                     [
                         calls_per_probe_file,
                         os.path.join(
-                            output_path, 
+                            output_path,
                             'merged_probes_methyl_calls_{}.txt'.format(len(meg_files)-1)
                         )
-                    ], 
+                    ],
                     merged_output_file
                 )
 
@@ -476,7 +481,7 @@ def live_megalodon(
                     )
                     continue
 
-                inference_session, array_probes_df, decoding_dict, temperatures, merge_dict = load_model(model)    
+                inference_session, array_probes_df, decoding_dict, temperatures, merge_dict = load_model(model)
 
                 logging.info("Starting prediction")
                 prediction_df = predict_sample(
@@ -490,7 +495,7 @@ def live_megalodon(
                 prediction_df['timestamp'] = timestamp
 
                 output_csv = os.path.join(
-                    output_path, 
+                    output_path,
                     'predictions_{}.csv'.format(Path(model).stem)
                 )
                 prediction_df.to_csv(
@@ -504,7 +509,7 @@ def live_megalodon(
 
                     # plot the last prediction
                     output_pdf = os.path.join(
-                        output_path, 
+                        output_path,
                         'predictions_{}_{}.pdf'.format(
                             len(meg_files)-1,
                             Path(model).stem,
@@ -519,7 +524,7 @@ def live_megalodon(
                         except FileNotFoundError:
                             logging.debug("No colors dict in zip file")
                             color_dict = None
-                    
+
                     plot_prediction(
                         prediction_df = prediction_df,
                         color_dict = color_dict,
@@ -527,7 +532,7 @@ def live_megalodon(
                     )
 
                     output_pdf = os.path.join(
-                        output_path, 
+                        output_path,
                         'predictions_overtime_{}.pdf'.format(
                             Path(model).stem,
                         )

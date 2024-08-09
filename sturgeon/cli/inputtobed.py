@@ -4,17 +4,18 @@ import logging
 import warnings
 
 from sturgeon.callmapping import (
-    bam_path_to_bed, 
-    mega_path_to_bed, 
+    bam_path_to_bed,
+    mega_path_to_bed,
     modkit_path_to_bed,
     modkit_pileup_file_to_bed
 )
 from sturgeon.utils import validate_megalodon_file, validate_modkit_file
 
+# TODO: remove this at some point since it is only needed for live functionalities
 try:
     import pysam
 except ImportError:
-    warnings.warn('Error loading modbampy, bam functionalities will not work')
+    pass
 
 def filetobed(
     input_path: List[str],
@@ -33,8 +34,8 @@ def filetobed(
 
     if reference_genome is not None:
         probes_file = os.path.join(
-            os.path.dirname(__file__), 
-            '../include/static', 
+            os.path.dirname(__file__),
+            '../include/static',
             'probes_{}.bed'.format(reference_genome)
         )
 
@@ -58,7 +59,7 @@ def filetobed(
 
     if pos_threshold <= neg_threshold:
         err_msg = '''
-        --pos-threshold cannot be smaller or equal to -neg-threshold, given: 
+        --pos-threshold cannot be smaller or equal to -neg-threshold, given:
         {} and {}
         '''.format(pos_threshold, neg_threshold)
         raise ValueError(err_msg)
@@ -76,8 +77,8 @@ def filetobed(
 
         warnings.warn(
         '''\nUsing this source is NOT recommended.\n
-        Please strongly consider using modkit (https://github.com/nanoporetech/modkit/), to extract methylation calls from bam files.\n 
-        Otherwise we rely on modbampy, which is currently deprecated. Updates to guppy might break modbampy compatibility and could give WRONG results.                   
+        Please strongly consider using modkit (https://github.com/nanoporetech/modkit/), to extract methylation calls from bam files.\n
+        Otherwise we rely on modbampy, which is currently deprecated. Updates to guppy might break modbampy compatibility and could give WRONG results.
         ''')
 
         bamtobed(
@@ -88,13 +89,13 @@ def filetobed(
             neg_threshold = neg_threshold,
             pos_threshold = pos_threshold,
         )
-    
+
     elif source == 'megalodon':
 
         warnings.warn(
         '''\nUsing this source is NOT recommended.\n
-        Please strongly consider using modkit (https://github.com/nanoporetech/modkit/), to extract methylation calls.\n 
-        Megalodon is deprecated on ONT's end.                   
+        Please strongly consider using modkit (https://github.com/nanoporetech/modkit/), to extract methylation calls.\n
+        Megalodon is deprecated on ONT's end.
         ''')
 
         megatobed(
@@ -107,7 +108,7 @@ def filetobed(
         )
 
     elif source == 'modkit':
-        
+
         modkittobed_extract(
             input_path = input_path,
             output_path = output_path,
@@ -142,8 +143,8 @@ def bamtobed(
     neg_threshold: Optional[float] = 0.3,
     pos_threshold: Optional[float] = 0.7,
 ):
-    
-    
+
+
     logging.info("Bam to bed program")
 
     bam_files = list()
@@ -153,7 +154,7 @@ def bamtobed(
         for f in os.listdir(input_path):
             if not f.endswith('.bam'):
                 continue
-            bam_files.append(os.path.join(input_path, f)) 
+            bam_files.append(os.path.join(input_path, f))
     else:
         err_msg = '''
         --input-path must be a directory or file, given: {}
@@ -215,7 +216,7 @@ def megatobed(
         for f in os.listdir(input_path):
             if not f.endswith('.txt'):
                 continue
-            txt_files.append(os.path.join(input_path, f)) 
+            txt_files.append(os.path.join(input_path, f))
     else:
         err_msg = '''
         --input-path must be a directory or file, given: {}
@@ -257,7 +258,7 @@ def modkittobed_extract(
     pos_threshold: Optional[float] = 0.7,
     fivemc_code: str = 'm',
 ):
-    
+
     logging.info("Modkit extract to bed program")
 
     txt_files = list()
@@ -267,7 +268,7 @@ def modkittobed_extract(
         for f in os.listdir(input_path):
             if not f.endswith('.txt'):
                 continue
-            txt_files.append(os.path.join(input_path, f)) 
+            txt_files.append(os.path.join(input_path, f))
     else:
         err_msg = '''
         --input-path must be a directory or file, given: {}
@@ -311,7 +312,7 @@ def modkittobed_pileup(
     pos_threshold: Optional[float] = 0.7,
     fivemc_code: str = 'm',
 ):
-    
+
     logging.info("Modkit pileup to bed program")
     if not os.path.isfile(input_path):
         err_msg = '''
@@ -332,10 +333,3 @@ def modkittobed_pileup(
         pos_threshold = pos_threshold,
         fivemc_code = fivemc_code,
     )
-
-
-
-    
-
-
-    

@@ -8,10 +8,12 @@ import warnings
 
 import pandas as pd
 import numpy as np
+
+# TODO: remove this at some point since it is only needed for the live functionality
 try:
     from modbampy import ModBam
 except ImportError:
-    warnings.warn('Error loading modbampy, bam functionalities will not work')
+    pass
 
 from sturgeon.utils import read_probes_file
 
